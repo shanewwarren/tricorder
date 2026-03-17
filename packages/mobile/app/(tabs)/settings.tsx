@@ -2,31 +2,9 @@ import { Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-// TODO: Replace mock data with tRPC queries
-// const { data: config } = trpc.config.get.useQuery();
-// const { data: plugins } = trpc.config.plugins.useQuery();
-// const { data: mcpServers } = trpc.config.mcpServers.useQuery();
+import { trpc } from "@/src/lib/trpc";
 
 type Mode = "autonomous" | "interactive";
-
-const MOCK_CONFIG = {
-	tailscaleIp: "100.64.1.42",
-	port: "3284",
-	connected: true,
-	scanDirectory: "~/code/",
-	defaultMode: "autonomous" as Mode,
-};
-
-const MOCK_PLUGINS = [
-	{ name: "superpowers", enabled: true },
-	{ name: "code-review", enabled: true },
-];
-
-const MOCK_MCP_SERVERS = [
-	{ name: "filesystem", subtitle: "Local file access" },
-	{ name: "github", subtitle: "GitHub API integration" },
-];
 
 function SectionHeader({ title }: { title: string }) {
 	return (
@@ -94,10 +72,14 @@ function SettingRow({
 
 export default function SettingsScreen() {
 	const insets = useSafeAreaInsets();
-	const [defaultMode, setDefaultMode] = useState<Mode>(MOCK_CONFIG.defaultMode);
+	const { data: config, isError } = trpc.config.get.useQuery();
+	const isConnected = !!config && !isError;
 
-	// Toggle this to see the first-run variant
-	const isConnected = MOCK_CONFIG.connected;
+	const defaultMode = (config as any)?.defaultMode ?? "autonomous";
+	const [selectedMode, setSelectedMode] = useState<Mode>(defaultMode);
+
+	const plugins: string[] = (config as any)?.plugins ?? [];
+	const mcpServers: Record<string, any> = (config as any)?.mcpServers ?? {};
 
 	return (
 		<View
@@ -206,7 +188,7 @@ export default function SettingsScreen() {
 				>
 					<SettingRow
 						label="Tailscale IP"
-						value={isConnected ? MOCK_CONFIG.tailscaleIp : undefined}
+						value={isConnected ? (config as any).host : undefined}
 						rightElement={
 							!isConnected ? (
 								<Text
@@ -223,7 +205,7 @@ export default function SettingsScreen() {
 					/>
 					<SettingRow
 						label="Port"
-						value={isConnected ? MOCK_CONFIG.port : undefined}
+						value={isConnected ? String((config as any).port) : undefined}
 						rightElement={
 							!isConnected ? (
 								<Text
@@ -285,7 +267,7 @@ export default function SettingsScreen() {
 							color: isConnected ? "#1C1917" : "#A8A29E",
 						}}
 					>
-						{isConnected ? MOCK_CONFIG.scanDirectory : "Select a directory..."}
+						{isConnected ? (config as any).scanDirectory : "Select a directory..."}
 					</Text>
 					<Feather name="chevron-right" size={18} color="#78716C" />
 				</Pressable>
@@ -294,10 +276,10 @@ export default function SettingsScreen() {
 				<SectionHeader title="Default Mode" />
 				<View style={{ flexDirection: "row", gap: 10 }}>
 					<Pressable
-						onPress={() => setDefaultMode("autonomous")}
+						onPress={() => setSelectedMode("autonomous")}
 						style={{
 							flex: 1,
-							backgroundColor: defaultMode === "autonomous" ? "#1C1917" : "#F1F1F1",
+							backgroundColor: selectedMode === "autonomous" ? "#1C1917" : "#F1F1F1",
 							borderRadius: 10,
 							paddingVertical: 10,
 							flexDirection: "row",
@@ -306,23 +288,23 @@ export default function SettingsScreen() {
 							gap: 6,
 						}}
 					>
-						<Feather name="zap" size={14} color={defaultMode === "autonomous" ? "#FFFFFF" : "#78716C"} />
+						<Feather name="zap" size={14} color={selectedMode === "autonomous" ? "#FFFFFF" : "#78716C"} />
 						<Text
 							style={{
 								fontFamily: "DM Sans",
 								fontSize: 13,
 								fontWeight: "600",
-								color: defaultMode === "autonomous" ? "#FFFFFF" : "#1C1917",
+								color: selectedMode === "autonomous" ? "#FFFFFF" : "#1C1917",
 							}}
 						>
 							Autonomous
 						</Text>
 					</Pressable>
 					<Pressable
-						onPress={() => setDefaultMode("interactive")}
+						onPress={() => setSelectedMode("interactive")}
 						style={{
 							flex: 1,
-							backgroundColor: defaultMode === "interactive" ? "#1C1917" : "#F1F1F1",
+							backgroundColor: selectedMode === "interactive" ? "#1C1917" : "#F1F1F1",
 							borderRadius: 10,
 							paddingVertical: 10,
 							flexDirection: "row",
@@ -331,13 +313,13 @@ export default function SettingsScreen() {
 							gap: 6,
 						}}
 					>
-						<Feather name="eye" size={14} color={defaultMode === "interactive" ? "#FFFFFF" : "#78716C"} />
+						<Feather name="eye" size={14} color={selectedMode === "interactive" ? "#FFFFFF" : "#78716C"} />
 						<Text
 							style={{
 								fontFamily: "DM Sans",
 								fontSize: 13,
 								fontWeight: "600",
-								color: defaultMode === "interactive" ? "#FFFFFF" : "#1C1917",
+								color: selectedMode === "interactive" ? "#FFFFFF" : "#1C1917",
 							}}
 						>
 							Interactive
@@ -347,7 +329,7 @@ export default function SettingsScreen() {
 
 				{/* PLUGINS */}
 				<SectionHeader title="Plugins" />
-				{isConnected ? (
+				{plugins.length > 0 ? (
 					<View
 						style={{
 							backgroundColor: "#F1F1F1",
@@ -355,45 +337,24 @@ export default function SettingsScreen() {
 							paddingHorizontal: 14,
 						}}
 					>
-						{MOCK_PLUGINS.map((plugin, i) => (
+						{plugins.map((plugin: string, i: number, arr: string[]) => (
 							<View
-								key={plugin.name}
+								key={plugin}
 								style={{
 									flexDirection: "row",
 									alignItems: "center",
 									paddingVertical: 14,
-									borderBottomWidth: i < MOCK_PLUGINS.length - 1 ? 1 : 0,
+									borderBottomWidth: i < arr.length - 1 ? 1 : 0,
 									borderBottomColor: "#E7E5E4",
 									gap: 10,
 								}}
 							>
 								<Feather name="package" size={16} color="#1C1917" />
-								<Text
-									style={{
-										fontFamily: "DM Sans",
-										fontSize: 14,
-										color: "#1C1917",
-										flex: 1,
-									}}
-								>
-									{plugin.name}
+								<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#1C1917", flex: 1 }}>
+									{plugin}
 								</Text>
-								<View
-									style={{
-										backgroundColor: "rgba(20, 184, 166, 0.12)",
-										borderRadius: 6,
-										paddingHorizontal: 8,
-										paddingVertical: 3,
-									}}
-								>
-									<Text
-										style={{
-											fontFamily: "DM Sans",
-											fontSize: 11,
-											fontWeight: "600",
-											color: "#14B8A6",
-										}}
-									>
+								<View style={{ backgroundColor: "rgba(20, 184, 166, 0.12)", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
+									<Text style={{ fontFamily: "DM Sans", fontSize: 11, fontWeight: "600", color: "#14B8A6" }}>
 										Enabled
 									</Text>
 								</View>
@@ -433,38 +394,23 @@ export default function SettingsScreen() {
 								paddingHorizontal: 14,
 							}}
 						>
-							{MOCK_MCP_SERVERS.map((server, i) => (
+							{Object.entries(mcpServers).map(([name, server]: [string, any], i: number, arr: [string, any][]) => (
 								<View
-									key={server.name}
+									key={name}
 									style={{
 										flexDirection: "row",
 										alignItems: "center",
 										paddingVertical: 14,
-										borderBottomWidth: i < MOCK_MCP_SERVERS.length - 1 ? 1 : 0,
+										borderBottomWidth: i < arr.length - 1 ? 1 : 0,
 										borderBottomColor: "#E7E5E4",
 										gap: 10,
 									}}
 								>
 									<Feather name="server" size={16} color="#1C1917" />
 									<View style={{ flex: 1 }}>
-										<Text
-											style={{
-												fontFamily: "DM Sans",
-												fontSize: 14,
-												color: "#1C1917",
-											}}
-										>
-											{server.name}
-										</Text>
-										<Text
-											style={{
-												fontFamily: "DM Sans",
-												fontSize: 12,
-												color: "#78716C",
-												marginTop: 2,
-											}}
-										>
-											{server.subtitle}
+										<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#1C1917" }}>{name}</Text>
+										<Text style={{ fontFamily: "DM Sans", fontSize: 12, color: "#78716C", marginTop: 2 }}>
+											{server.command}
 										</Text>
 									</View>
 								</View>
