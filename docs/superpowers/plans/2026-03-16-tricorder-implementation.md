@@ -129,6 +129,7 @@ tricorder/
 **Files:**
 - Create: `package.json`
 - Create: `bunfig.toml`
+- Create: `biome.json`
 - Create: `packages/shared/package.json`
 - Create: `packages/server/package.json`
 - Create: `packages/mobile/package.json`
@@ -140,11 +141,42 @@ tricorder/
 {
   "name": "tricorder",
   "private": true,
-  "workspaces": ["packages/*"]
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "check": "biome check .",
+    "format": "biome format --write .",
+    "lint": "biome lint ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0"
+  }
 }
 ```
 
-- [ ] **Step 2: Create bunfig.toml**
+- [ ] **Step 2: Create biome.json**
+
+```json
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.0/schema.json",
+  "organizeImports": { "enabled": true },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "tab",
+    "lineWidth": 120
+  },
+  "linter": {
+    "enabled": true,
+    "rules": { "recommended": true }
+  },
+  "files": {
+    "ignore": ["node_modules", "drizzle", ".expo", "dist"]
+  }
+}
+```
+
+Adjust `indentStyle` and `lineWidth` to your preference — tabs + 120 is a reasonable default.
+
+- [ ] **Step 3: Create bunfig.toml**
 
 ```toml
 [install]
@@ -222,12 +254,17 @@ peer = false
 }
 ```
 
-- [ ] **Step 7: Run `bun install` from root**
+- [ ] **Step 8: Run `bun install` from root**
 
 Run: `bun install`
-Expected: All workspace packages linked, node_modules created.
+Expected: All workspace packages linked, node_modules created, biome binary available.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Verify Biome works**
+
+Run: `bunx biome check .`
+Expected: No errors (no source files to check yet, clean exit).
+
+- [ ] **Step 10: Commit**
 
 ```bash
 git add -A && git commit -m "feat: initialize Bun monorepo with workspace packages"
