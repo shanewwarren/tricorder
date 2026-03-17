@@ -9,6 +9,7 @@ import { SessionService } from "./services/session.service";
 import { AgentService } from "./services/agent.service";
 import { SandboxService } from "./services/sandbox.service";
 import { WorktreeService } from "./services/worktree.service";
+import { UsageService } from "./services/usage.service";
 
 export function createAppContainer(config: ServerConfig, db: Db) {
 	const container = createContainer({
@@ -26,6 +27,7 @@ export function createAppContainer(config: ServerConfig, db: Db) {
 		agentService: asClass(AgentService).singleton(),
 		sandboxService: asClass(SandboxService).singleton(),
 		worktreeService: asClass(WorktreeService).singleton(),
+		usageService: asClass(UsageService).singleton(),
 	});
 
 	return container;
