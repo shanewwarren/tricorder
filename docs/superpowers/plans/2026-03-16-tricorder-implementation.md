@@ -6,7 +6,7 @@
 
 **Architecture:** Bun monorepo with 4 packages (shared, server, mobile, cli). Shared zod schemas provide end-to-end type safety via tRPC. Server wraps Claude Agent SDK for session management. Mobile app connects over Tailscale via tRPC HTTP + WebSocket subscriptions.
 
-**Tech Stack:** Bun, tRPC, Claude Agent SDK, bun:sqlite, Expo, NativeWind, Expo Router, TanStack Query, Zustand, simple-git, chokidar, zod
+**Tech Stack:** Bun, tRPC, Claude Agent SDK, Drizzle ORM (bun:sqlite), Awilix (DI), Expo, NativeWind, Expo Router, TanStack Query, Zustand, simple-git, chokidar, zod
 
 ---
 
@@ -33,40 +33,46 @@ tricorder/
 
     server/
       package.json
+      drizzle.config.ts                 — drizzle-kit config
       src/
         index.ts                        — server entry point (start tRPC + WS)
+        container.ts                    — Awilix DI container setup
         config.ts                       — load/validate ~/.tricorder/config.json
+        trpc.ts                         — shared tRPC instance + context type
         db/
-          index.ts                      — bun:sqlite setup + migrations
-          sessions.ts                   — session CRUD operations
-          messages.ts                   — message storage/retrieval
-          activity.ts                   — activity event logging/queries
-        session/
-          manager.ts                    — session lifecycle (create, pause, cancel, resume)
-          agent.ts                      — Agent SDK query() wrapper + streaming
-          sandbox.ts                    — PreToolUse hooks (path containment, bash restrictions)
-          worktree.ts                   — git worktree create/cleanup
+          schema.ts                     — Drizzle table definitions (sessions, messages, activity_events)
+          index.ts                      — Drizzle instance (bun:sqlite)
+          migrate.ts                    — run migrations on startup
+        repositories/
+          sessions.repo.ts              — session CRUD via Drizzle
+          messages.repo.ts              — message storage/retrieval via Drizzle
+          activity.repo.ts              — activity event logging/queries via Drizzle
+          repos.repo.ts                 — git repo scanning (filesystem + simple-git)
+        services/
+          session.service.ts            — session lifecycle (create, pause, cancel, resume, handoff)
+          agent.service.ts              — Agent SDK query() wrapper + streaming
+          sandbox.service.ts            — PreToolUse hooks (path containment, bash restrictions)
+          worktree.service.ts           — git worktree create/cleanup
+          usage.service.ts              — poll usage API, cache results, Keychain reader
+          watcher.service.ts            — local session detection (chokidar + process scanning)
+          cleanup.service.ts            — worktree TTL cleanup job
         routers/
-          repos.ts                      — repos.list, repos.detail
-          sessions.ts                   — sessions.* procedures
-          local-sessions.ts             — localSessions.* procedures
-          usage.ts                      — usage.current
-          activity.ts                   — activity.list
-          config.ts                     — config.get
+          repos.router.ts               — repos.list, repos.detail (thin, delegates to repos.repo)
+          sessions.router.ts            — sessions.* procedures (delegates to session.service)
+          local-sessions.router.ts      — localSessions.* procedures (delegates to watcher.service)
+          usage.router.ts               — usage.current (delegates to usage.service)
+          activity.router.ts            — activity.list (delegates to activity.repo)
+          config.router.ts              — config.get
           index.ts                      — merge all routers
-        usage/
-          monitor.ts                    — poll usage API, cache results
-          keychain.ts                   — read OAuth creds from macOS Keychain
-        watcher/
-          local-sessions.ts             — chokidar watcher for ~/.claude/
-        cleanup.ts                      — worktree TTL cleanup job
       tests/
-        db.test.ts
-        session-manager.test.ts
-        sandbox.test.ts
+        repositories/
+          sessions.repo.test.ts
+          messages.repo.test.ts
+        services/
+          session.service.test.ts
+          sandbox.service.test.ts
         routers/
-          repos.test.ts
-          sessions.test.ts
+          repos.router.test.ts
 
     mobile/
       package.json
@@ -106,7 +112,8 @@ tricorder/
     cli/
       package.json
       src/
-        index.ts                        — CLI entry point (commander/yargs)
+        index.ts                        — CLI entry point
+        client.ts                       — shared tRPC client factory
         commands/
           resume.ts                     — tricorder resume <name>
           list.ts                       — tricorder list
@@ -175,12 +182,15 @@ peer = false
     "@tricorder/shared": "workspace:*",
     "@trpc/server": "^11.0.0",
     "@anthropic-ai/claude-agent-sdk": "latest",
+    "awilix": "^12.0.0",
+    "drizzle-orm": "^0.38.0",
     "simple-git": "^3.27.0",
     "chokidar": "^4.0.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "drizzle-kit": "^0.30.0"
   }
 }
 ```
@@ -434,16 +444,14 @@ git add packages/shared && git commit -m "feat: add repo, usage, activity, confi
 
 ---
 
-## Chunk 2: Server — Database, Config, and Repos Router
+## Chunk 2: Server — Drizzle DB, DI Container, Config, Repos
 
-### Task 4: SQLite database setup
+### Task 4: Drizzle schema + database setup
 
 **Files:**
-- Create: `packages/server/src/db/index.ts`
-- Create: `packages/server/src/db/sessions.ts`
-- Create: `packages/server/src/db/messages.ts`
-- Create: `packages/server/src/db/activity.ts`
-- Create: `packages/server/tests/db.test.ts`
+- Create: `packages/server/src/db/schema.ts` — Drizzle table definitions
+- Create: `packages/server/src/db/index.ts` — Drizzle instance (bun:sqlite)
+- Create: `packages/server/drizzle.config.ts` — drizzle-kit config
 
 - [ ] **Step 1: Write failing test for db initialization**
 
