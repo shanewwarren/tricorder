@@ -5,6 +5,7 @@ import { ModeBadge } from "@/src/components/ModeBadge";
 import { StatusPill } from "@/src/components/StatusPill";
 import { ToolCard } from "@/src/components/ToolCard";
 import { trpc } from "@/src/lib/trpc";
+import { useStreamStore } from "@/src/lib/store";
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -30,12 +31,43 @@ export default function SessionScreen() {
 
 	const { data: sessionData } = trpc.sessions.detail.useQuery(
 		{ id: id! },
-		{ enabled: !!id, refetchInterval: 3000 }
+		{ enabled: !!id }
 	);
 	const utils = trpc.useUtils();
 
 	const session = sessionData?.session;
 	const messages = sessionData?.messages ?? [];
+
+	const initStream = useStreamStore((s) => s.initStream);
+	const addMessage = useStreamStore((s) => s.addMessage);
+	const setConnected = useStreamStore((s) => s.setConnected);
+	const clearStream = useStreamStore((s) => s.clearStream);
+	const stream = useStreamStore((s) => s.streams[id!]);
+
+	// Initialize stream on mount
+	useEffect(() => {
+		if (id) initStream(id);
+		return () => {
+			if (id) clearStream(id);
+		};
+	}, [id]);
+
+	// Subscribe to live messages
+	trpc.sessions.stream.useSubscription(
+		{ id: id!, lastSeenIndex: stream?.lastSeenIndex ?? 0 },
+		{
+			enabled: !!id && !!stream,
+			onData: (message) => {
+				addMessage(id!, message);
+			},
+			onStarted: () => {
+				setConnected(id!, true);
+			},
+			onError: () => {
+				setConnected(id!, false);
+			},
+		}
+	);
 
 	const pauseMutation = trpc.sessions.pause.useMutation({
 		onSuccess: () => utils.sessions.detail.invalidate({ id: id! }),
@@ -61,6 +93,11 @@ export default function SessionScreen() {
 		);
 	}
 
+	// Use stream messages if connected, fall back to query messages
+	const displayMessages = stream?.connected && stream.messages.length > 0
+		? stream.messages
+		: messages;
+
 	const isActive = session.status === "active";
 	const isError = session.status === "error";
 	const showInput = isActive;
@@ -77,7 +114,7 @@ export default function SessionScreen() {
 	// Auto-scroll to bottom when messages change
 	useEffect(() => {
 		setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
-	}, [messages.length]);
+	}, [displayMessages.length]);
 
 	const handleSend = () => {
 		if (!inputText.trim()) return;
@@ -264,7 +301,7 @@ export default function SessionScreen() {
 				}}
 				showsVerticalScrollIndicator={false}
 			>
-				{messages.map((msg, i) => {
+				{displayMessages.map((msg, i) => {
 					if (msg.type === "assistant" || msg.type === "result") {
 						const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
 						return <MessageBubble key={i} content={text} />;
