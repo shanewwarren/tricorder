@@ -1,8 +1,9 @@
 import { Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { trpc } from "@/src/lib/trpc";
+import { useTrpcContext } from "@/src/lib/TrpcProvider";
 
 type Mode = "autonomous" | "interactive";
 
@@ -74,6 +75,11 @@ export default function SettingsScreen() {
 	const insets = useSafeAreaInsets();
 	const { data: config, isError } = trpc.config.get.useQuery();
 	const isConnected = !!config && !isError;
+
+	const { reconnect, serverUrl } = useTrpcContext();
+	const [ipInput, setIpInput] = useState("");
+	const [portInput, setPortInput] = useState("3141");
+	const [editingConnection, setEditingConnection] = useState(false);
 
 	const defaultMode = (config as any)?.defaultMode ?? "autonomous";
 	const [selectedMode, setSelectedMode] = useState<Mode>(defaultMode);
@@ -150,6 +156,7 @@ export default function SettingsScreen() {
 							Connect to your server to start managing Claude Code sessions remotely.
 						</Text>
 						<Pressable
+							onPress={() => setEditingConnection(true)}
 							style={{
 								backgroundColor: "#FFFFFF",
 								borderRadius: 12,
@@ -246,6 +253,56 @@ export default function SettingsScreen() {
 						}
 					/>
 				</View>
+
+				{(!isConnected || editingConnection) && (
+					<View style={{ marginTop: 12, gap: 10 }}>
+						<TextInput
+							value={ipInput}
+							onChangeText={setIpInput}
+							placeholder="100.x.x.x"
+							placeholderTextColor="#A8A29E"
+							style={{
+								borderWidth: 1, borderColor: "#D6D3D1", borderRadius: 12,
+								padding: 14, fontFamily: "JetBrains Mono", fontSize: 14, color: "#1C1917",
+							}}
+						/>
+						<TextInput
+							value={portInput}
+							onChangeText={setPortInput}
+							placeholder="3141"
+							placeholderTextColor="#A8A29E"
+							keyboardType="number-pad"
+							style={{
+								borderWidth: 1, borderColor: "#D6D3D1", borderRadius: 12,
+								padding: 14, fontFamily: "JetBrains Mono", fontSize: 14, color: "#1C1917",
+							}}
+						/>
+						<Pressable
+							onPress={() => {
+								if (!ipInput.trim()) return;
+								const url = `http://${ipInput.trim()}:${portInput || "3141"}`;
+								reconnect(url);
+								setEditingConnection(false);
+							}}
+							style={{
+								backgroundColor: "#EA580C", borderRadius: 12, paddingVertical: 12,
+								alignItems: "center",
+							}}
+						>
+							<Text style={{ fontFamily: "DM Sans", fontSize: 14, fontWeight: "700", color: "#FFFFFF" }}>
+								Connect
+							</Text>
+						</Pressable>
+					</View>
+				)}
+
+				{isConnected && !editingConnection && (
+					<Pressable onPress={() => setEditingConnection(true)} style={{ marginTop: 8 }}>
+						<Text style={{ fontFamily: "DM Sans", fontSize: 13, color: "#EA580C" }}>
+							Change server
+						</Text>
+					</Pressable>
+				)}
 
 				{/* SCAN DIRECTORY */}
 				<SectionHeader title="Scan Directory" />
