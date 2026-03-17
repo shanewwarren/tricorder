@@ -5,6 +5,10 @@ import { SessionsRepository } from "./repositories/sessions.repo";
 import { MessagesRepository } from "./repositories/messages.repo";
 import { ActivityRepository } from "./repositories/activity.repo";
 import { ReposRepository } from "./repositories/repos.repo";
+import { SessionService } from "./services/session.service";
+import { AgentService } from "./services/agent.service";
+import { SandboxService } from "./services/sandbox.service";
+import { WorktreeService } from "./services/worktree.service";
 
 export function createAppContainer(config: ServerConfig, db: Db) {
 	const container = createContainer({
@@ -18,6 +22,10 @@ export function createAppContainer(config: ServerConfig, db: Db) {
 		messagesRepo: asClass(MessagesRepository).singleton(),
 		activityRepo: asClass(ActivityRepository).singleton(),
 		reposRepo: asFunction(() => new ReposRepository(config.scanDirectory)).singleton(),
+		sessionService: asClass(SessionService).singleton(),
+		agentService: asClass(AgentService).singleton(),
+		sandboxService: asClass(SandboxService).singleton(),
+		worktreeService: asClass(WorktreeService).singleton(),
 	});
 
 	return container;
