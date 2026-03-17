@@ -4,93 +4,12 @@ import { MessageBubble } from "@/src/components/MessageBubble";
 import { ModeBadge } from "@/src/components/ModeBadge";
 import { StatusPill } from "@/src/components/StatusPill";
 import { ToolCard } from "@/src/components/ToolCard";
+import { trpc } from "@/src/lib/trpc";
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-// ─── Types ──────────────────────────────────────────────────────────────────
-
-type SessionStatus = "running" | "waiting" | "paused" | "completed" | "error";
-
-type MessageItem =
-	| { type: "assistant"; content: string }
-	| {
-			type: "tool_use";
-			toolType: "Read" | "Edit" | "Bash" | "Grep";
-			title: string;
-			detail: string;
-			diff?: { removed: string[]; added: string[] };
-			result?: { success: boolean; output: string };
-	  }
-	| { type: "approval_request"; action: string };
-
-interface SessionData {
-	id: string;
-	name: string;
-	repoName: string;
-	mode: "autonomous" | "interactive";
-	status: SessionStatus;
-	elapsedSeconds: number;
-	messages: MessageItem[];
-}
-
-// ─── Mock data ──────────────────────────────────────────────────────────────
-
-const MOCK_SESSION: SessionData = {
-	id: "1",
-	name: "Add pagination to API",
-	repoName: "api-service",
-	mode: "autonomous",
-	status: "running",
-	elapsedSeconds: 272,
-	messages: [
-		{
-			type: "assistant",
-			content:
-				"I'll add pagination support to the API routes. Let me first read the current route definitions to understand the existing structure.",
-		},
-		{
-			type: "tool_use",
-			toolType: "Read",
-			title: "Read",
-			detail: "src/api/routes.ts — 148 lines read",
-		},
-		{
-			type: "tool_use",
-			toolType: "Edit",
-			title: "Edit",
-			detail: "src/api/routes.ts",
-			diff: {
-				removed: ["app.get('/items', getItems)"],
-				added: ["app.get('/items', paginate(getItems))", "app.get('/items/count', getCount)"],
-			},
-		},
-		{
-			type: "tool_use",
-			toolType: "Bash",
-			title: "Bash",
-			detail: "$ npm test",
-			result: { success: true, output: "14 tests passed" },
-		},
-		{
-			type: "approval_request",
-			action: "Edit auth.ts — update token expiry logic",
-		},
-		{
-			type: "assistant",
-			content:
-				"All tests are passing. The pagination middleware now supports offset and limit query params with sensible defaults.",
-		},
-	],
-};
-
-const MOCK_ERROR_SESSION: SessionData = {
-	...MOCK_SESSION,
-	status: "error",
-	elapsedSeconds: 768,
-};
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -109,24 +28,60 @@ export default function SessionScreen() {
 	const scrollRef = useRef<ScrollView>(null);
 	const [inputText, setInputText] = useState("");
 
-	// TODO: Wire trpc.sessions.stream.useSubscription({ sessionId: id })
-	// to feed messages into the Zustand store, and read from useStreamStore().
-	// For now we use mock data.
-	const session: SessionData = id === "error" ? MOCK_ERROR_SESSION : MOCK_SESSION;
+	const { data: sessionData } = trpc.sessions.detail.useQuery(
+		{ id: id! },
+		{ enabled: !!id, refetchInterval: 3000 }
+	);
+	const utils = trpc.useUtils();
 
-	const isActive = session.status === "running" || session.status === "waiting";
+	const session = sessionData?.session;
+	const messages = sessionData?.messages ?? [];
+
+	const pauseMutation = trpc.sessions.pause.useMutation({
+		onSuccess: () => utils.sessions.detail.invalidate({ id: id! }),
+	});
+	const cancelMutation = trpc.sessions.cancel.useMutation({
+		onSuccess: () => utils.sessions.detail.invalidate({ id: id! }),
+	});
+	const sendMessage = trpc.sessions.message.useMutation({
+		onSuccess: () => utils.sessions.detail.invalidate({ id: id! }),
+	});
+
+	// Handoff query - only when session is not active
+	const { data: handoff } = trpc.sessions.handoff.useQuery(
+		{ id: id! },
+		{ enabled: !!session && session.status !== "active" }
+	);
+
+	if (!session) {
+		return (
+			<View style={{ flex: 1, backgroundColor: "#FAFAF9", justifyContent: "center", alignItems: "center" }}>
+				<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#A8A29E" }}>Loading session...</Text>
+			</View>
+		);
+	}
+
+	const isActive = session.status === "active";
 	const isError = session.status === "error";
 	const showInput = isActive;
 	const showHandoff = !isActive;
 
+	// Map server status to UI status for StatusPill
+	const uiStatus = session.status === "active" ? "running" :
+	                  session.status === "cancelled" ? "completed" :
+	                  session.status;
+
+	// Calculate elapsed time from createdAt
+	const elapsedSeconds = Math.floor((Date.now() - new Date(session.createdAt).getTime()) / 1000);
+
 	// Auto-scroll to bottom when messages change
 	useEffect(() => {
 		setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
-	}, [session.messages.length]);
+	}, [messages.length]);
 
 	const handleSend = () => {
 		if (!inputText.trim()) return;
-		// TODO: Send message via tRPC mutation
+		sendMessage.mutate({ id: session.id, message: inputText.trim() });
 		setInputText("");
 	};
 
@@ -177,7 +132,7 @@ export default function SessionScreen() {
 							color: "#292524",
 						}}
 					>
-						{formatElapsed(session.elapsedSeconds)}
+						{formatElapsed(elapsedSeconds)}
 					</Text>
 				</View>
 
@@ -201,50 +156,26 @@ export default function SessionScreen() {
 						{session.repoName}
 					</Text>
 					<ModeBadge mode={session.mode} />
-					{isError && <StatusPill status="error" />}
+					{isError && <StatusPill status={uiStatus as any} />}
 				</View>
 
 				{/* Row 3: Action buttons */}
-				<View
-					style={{
-						flexDirection: "row",
-						paddingHorizontal: 16,
-						gap: 10,
-						paddingBottom: 12,
-					}}
-				>
-					{isError ? (
-						<Pressable
-							style={({ pressed }) => ({
-								flex: 1,
-								height: 36,
-								backgroundColor: pressed ? "#0F9380" : "#14B8A6",
-								borderRadius: 8,
-								flexDirection: "row",
-								alignItems: "center",
-								justifyContent: "center",
-								gap: 6,
-							})}
-						>
-							<Feather name="refresh-cw" size={14} color="#FFFFFF" />
-							<Text
-								style={{
-									fontFamily: "DM Sans",
-									fontSize: 13,
-									fontWeight: "600",
-									color: "#FFFFFF",
-								}}
-							>
-								Retry
-							</Text>
-						</Pressable>
-					) : (
-						<>
+				{(isActive || isError) && (
+					<View
+						style={{
+							flexDirection: "row",
+							paddingHorizontal: 16,
+							gap: 10,
+							paddingBottom: 12,
+						}}
+					>
+						{isError ? (
 							<Pressable
+								onPress={() => sendMessage.mutate({ id: session.id, message: "Continue from where you left off." })}
 								style={({ pressed }) => ({
 									flex: 1,
 									height: 36,
-									backgroundColor: pressed ? "rgba(217, 119, 6, 0.2)" : "rgba(217, 119, 6, 0.12)",
+									backgroundColor: pressed ? "#0F9380" : "#14B8A6",
 									borderRadius: 8,
 									flexDirection: "row",
 									alignItems: "center",
@@ -252,45 +183,74 @@ export default function SessionScreen() {
 									gap: 6,
 								})}
 							>
-								<Feather name="pause" size={14} color="#D97706" />
+								<Feather name="refresh-cw" size={14} color="#FFFFFF" />
 								<Text
 									style={{
 										fontFamily: "DM Sans",
 										fontSize: 13,
 										fontWeight: "600",
-										color: "#D97706",
+										color: "#FFFFFF",
 									}}
 								>
-									Pause
+									Retry
 								</Text>
 							</Pressable>
-							<Pressable
-								style={({ pressed }) => ({
-									flex: 1,
-									height: 36,
-									backgroundColor: pressed ? "rgba(220, 38, 38, 0.2)" : "rgba(220, 38, 38, 0.12)",
-									borderRadius: 8,
-									flexDirection: "row",
-									alignItems: "center",
-									justifyContent: "center",
-									gap: 6,
-								})}
-							>
-								<Feather name="x" size={14} color="#DC2626" />
-								<Text
-									style={{
-										fontFamily: "DM Sans",
-										fontSize: 13,
-										fontWeight: "600",
-										color: "#DC2626",
-									}}
+						) : (
+							<>
+								<Pressable
+									onPress={() => pauseMutation.mutate({ id: session.id })}
+									style={({ pressed }) => ({
+										flex: 1,
+										height: 36,
+										backgroundColor: pressed ? "rgba(217, 119, 6, 0.2)" : "rgba(217, 119, 6, 0.12)",
+										borderRadius: 8,
+										flexDirection: "row",
+										alignItems: "center",
+										justifyContent: "center",
+										gap: 6,
+									})}
 								>
-									Cancel
-								</Text>
-							</Pressable>
-						</>
-					)}
-				</View>
+									<Feather name="pause" size={14} color="#D97706" />
+									<Text
+										style={{
+											fontFamily: "DM Sans",
+											fontSize: 13,
+											fontWeight: "600",
+											color: "#D97706",
+										}}
+									>
+										Pause
+									</Text>
+								</Pressable>
+								<Pressable
+									onPress={() => cancelMutation.mutate({ id: session.id })}
+									style={({ pressed }) => ({
+										flex: 1,
+										height: 36,
+										backgroundColor: pressed ? "rgba(220, 38, 38, 0.2)" : "rgba(220, 38, 38, 0.12)",
+										borderRadius: 8,
+										flexDirection: "row",
+										alignItems: "center",
+										justifyContent: "center",
+										gap: 6,
+									})}
+								>
+									<Feather name="x" size={14} color="#DC2626" />
+									<Text
+										style={{
+											fontFamily: "DM Sans",
+											fontSize: 13,
+											fontWeight: "600",
+											color: "#DC2626",
+										}}
+									>
+										Cancel
+									</Text>
+								</Pressable>
+							</>
+						)}
+					</View>
+				)}
 			</View>
 
 			{/* ── Message Stream ──────────────────────────────────────── */}
@@ -304,37 +264,34 @@ export default function SessionScreen() {
 				}}
 				showsVerticalScrollIndicator={false}
 			>
-				{session.messages.map((msg, i) => {
-					switch (msg.type) {
-						case "assistant":
-							return <MessageBubble key={i} content={msg.content} />;
-						case "tool_use":
-							return (
-								<ToolCard
-									key={i}
-									type={msg.toolType}
-									title={msg.title}
-									detail={msg.detail}
-									diff={msg.diff}
-									result={msg.result}
-								/>
-							);
-						case "approval_request":
-							return (
-								<ApprovalPrompt
-									key={i}
-									action={msg.action}
-									onApprove={() => {
-										// TODO: Send approval via tRPC mutation
-									}}
-									onDeny={() => {
-										// TODO: Send denial via tRPC mutation
-									}}
-								/>
-							);
-						default:
-							return null;
+				{messages.map((msg, i) => {
+					if (msg.type === "assistant" || msg.type === "result") {
+						const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
+						return <MessageBubble key={i} content={text} />;
 					}
+					if (msg.type === "tool_use") {
+						const content = msg.content as any;
+						return (
+							<ToolCard
+								key={i}
+								type={content.tool ?? "Bash"}
+								title={content.tool ?? "Tool"}
+								detail={content.input?.file_path ?? content.input?.command ?? ""}
+							/>
+						);
+					}
+					if (msg.type === "approval_request") {
+						const content = msg.content as any;
+						return (
+							<ApprovalPrompt
+								key={i}
+								action={content.description ?? "Pending approval"}
+								onApprove={() => {}}
+								onDeny={() => {}}
+							/>
+						);
+					}
+					return null;
 				})}
 			</ScrollView>
 
@@ -389,7 +346,7 @@ export default function SessionScreen() {
 						</Pressable>
 					</View>
 				) : (
-					<HandoffBanner command={`tricorder resume ${session.name.toLowerCase().replace(/\s+/g, "-")}`} />
+					<HandoffBanner command={handoff?.resumeCommand ?? `tricorder resume ${session.name.toLowerCase().replace(/\s+/g, "-")}`} />
 				)}
 			</View>
 		</KeyboardAvoidingView>
