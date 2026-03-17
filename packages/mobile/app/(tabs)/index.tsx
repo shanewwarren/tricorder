@@ -1,6 +1,7 @@
 import { SegmentControl } from "@/src/components/SegmentControl";
 import { SessionCard } from "@/src/components/SessionCard";
 import { UsageIndicator } from "@/src/components/UsageIndicator";
+import { trpc } from "@/src/lib/trpc";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState, useMemo } from "react";
@@ -8,15 +9,6 @@ import { FlatList, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type SessionStatus = "running" | "waiting" | "paused" | "completed" | "local" | "error";
-
-interface Session {
-	id: string;
-	name: string;
-	repoName: string;
-	mode: "autonomous" | "interactive";
-	status: SessionStatus;
-	lastActivity: string;
-}
 
 const SEGMENTS = ["All", "Active", "Paused", "Done", "Local"];
 
@@ -28,58 +20,26 @@ const SEGMENT_STATUS_MAP: Record<string, SessionStatus[] | null> = {
 	Local: ["local"],
 };
 
-// Mock data matching the design
-const MOCK_SESSIONS: Session[] = [
-	{
-		id: "1",
-		name: "Add pagination to API",
-		repoName: "api-service",
-		mode: "autonomous",
-		status: "running",
-		lastActivity: "Editing src/api/routes.ts \u2014 adding offset parameter",
-	},
-	{
-		id: "2",
-		name: "Fix auth token refresh",
-		repoName: "auth-module",
-		mode: "interactive",
-		status: "waiting",
-		lastActivity: "Awaiting approval to edit middleware/auth.ts",
-	},
-	{
-		id: "3",
-		name: "Refactor database queries",
-		repoName: "backend-core",
-		mode: "autonomous",
-		status: "paused",
-		lastActivity: "Paused \u2014 waiting for CI pipeline to complete",
-	},
-	{
-		id: "4",
-		name: "Write unit tests for utils",
-		repoName: "shared-utils",
-		mode: "autonomous",
-		status: "completed",
-		lastActivity: "Finished \u2014 23 tests added, all passing",
-	},
-	{
-		id: "5",
-		name: "Debug memory leak in worker",
-		repoName: "worker-service",
-		mode: "interactive",
-		status: "local",
-		lastActivity: "Interactive session \u2014 investigating heap snapshots",
-	},
-];
-
 export default function SessionsScreen() {
 	const router = useRouter();
 	const insets = useSafeAreaInsets();
 	const [activeSegment, setActiveSegment] = useState(0);
 
-	// TODO: Replace mock data with tRPC query
-	// const { data: sessions } = trpc.sessions.list.useQuery();
-	const sessions = MOCK_SESSIONS;
+	const { data: serverSessions, isLoading } = trpc.sessions.list.useQuery();
+
+	// Map server status to UI status
+	const sessions = useMemo(() => {
+		if (!serverSessions) return [];
+		return serverSessions.map((s) => ({
+			id: s.id,
+			name: s.name,
+			repoName: s.repoName,
+			mode: s.mode as "autonomous" | "interactive",
+			status: (s.status === "active" ? "running" : s.status === "cancelled" ? "completed" : s.status) as
+				"running" | "waiting" | "paused" | "completed" | "local" | "error",
+			lastActivity: s.lastActivity || s.lastError || "",
+		}));
+	}, [serverSessions]);
 
 	const filteredSessions = useMemo(() => {
 		const allowedStatuses = SEGMENT_STATUS_MAP[SEGMENTS[activeSegment]];
@@ -163,6 +123,13 @@ export default function SessionsScreen() {
 					gap: 12,
 				}}
 				showsVerticalScrollIndicator={false}
+				ListEmptyComponent={
+					<View style={{ paddingTop: 40, alignItems: "center" }}>
+						<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#A8A29E" }}>
+							{isLoading ? "Loading sessions..." : "No sessions yet"}
+						</Text>
+					</View>
+				}
 			/>
 		</View>
 	);
