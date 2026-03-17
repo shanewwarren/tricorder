@@ -1,0 +1,13 @@
+{
+	"name": "tricorder",
+	"private": true,
+	"workspaces": ["packages/*"],
+	"scripts": {
+		"check": "biome check .",
+		"format": "biome format --write .",
+		"lint": "biome lint ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.0"
+	}
+}
