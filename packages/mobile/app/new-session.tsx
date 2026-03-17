@@ -1,31 +1,49 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-// TODO: Replace mock data with tRPC queries
-// const { data: repos } = trpc.repos.list.useQuery();
-// const { data: branches } = trpc.repos.branches.useQuery({ repoId });
-
-const MOCK_REPOS = [
-	{ id: "1", name: "api-service" },
-	{ id: "2", name: "auth-module" },
-	{ id: "3", name: "backend-core" },
-	{ id: "4", name: "shared-utils" },
-];
-
-const MOCK_BRANCHES = ["main", "develop", "feature/auth", "fix/memory-leak"];
+import { trpc } from "@/src/lib/trpc";
 
 type Mode = "autonomous" | "interactive";
 
 export default function NewSessionScreen() {
 	const router = useRouter();
 	const insets = useSafeAreaInsets();
-	const [selectedRepo, setSelectedRepo] = useState(MOCK_REPOS[0]);
-	const [selectedBranch, setSelectedBranch] = useState(MOCK_BRANCHES[0]);
-	const [prompt, setPrompt] = useState("");
+
+	const { data: repos } = trpc.repos.list.useQuery();
+	const [selectedRepo, setSelectedRepo] = useState<{ name: string; path: string; defaultBranch: string } | null>(null);
+
+	// Fetch branches when repo is selected
+	const { data: repoDetail } = trpc.repos.detail.useQuery(
+		{ path: selectedRepo?.path ?? "" },
+		{ enabled: !!selectedRepo }
+	);
+	const branches = repoDetail?.branches ?? ["main"];
+	const [selectedBranch, setSelectedBranch] = useState("main");
+
 	const [mode, setMode] = useState<Mode>("autonomous");
+	const [prompt, setPrompt] = useState("");
+
+	// Pickers
+	const [showRepoPicker, setShowRepoPicker] = useState(false);
+	const [showBranchPicker, setShowBranchPicker] = useState(false);
+
+	const utils = trpc.useUtils();
+	const createSession = trpc.sessions.create.useMutation({
+		onSuccess: (data) => {
+			utils.sessions.list.invalidate();
+			utils.activity.list.invalidate();
+			router.replace(`/session/${data.id}` as any);
+		},
+	});
+
+	useEffect(() => {
+		if (repos?.length && !selectedRepo) {
+			setSelectedRepo(repos[0]);
+			setSelectedBranch(repos[0].defaultBranch);
+		}
+	}, [repos]);
 
 	return (
 		<View
@@ -80,6 +98,7 @@ export default function NewSessionScreen() {
 					Repository
 				</Text>
 				<Pressable
+					onPress={() => setShowRepoPicker(!showRepoPicker)}
 					style={{
 						flexDirection: "row",
 						alignItems: "center",
@@ -99,10 +118,34 @@ export default function NewSessionScreen() {
 							flex: 1,
 						}}
 					>
-						{selectedRepo.name}
+						{selectedRepo?.name ?? "Select a repository"}
 					</Text>
 					<Feather name="chevron-down" size={18} color="#78716C" />
 				</Pressable>
+				{showRepoPicker && repos && (
+					<View style={{ borderWidth: 1, borderColor: "#D6D3D1", borderRadius: 12, marginBottom: 8, maxHeight: 200, overflow: "hidden" }}>
+						<ScrollView nestedScrollEnabled>
+							{repos.map((repo) => (
+								<Pressable
+									key={repo.path}
+									onPress={() => {
+										setSelectedRepo(repo);
+										setSelectedBranch(repo.defaultBranch);
+										setShowRepoPicker(false);
+									}}
+									style={({ pressed }) => ({
+										padding: 14,
+										borderBottomWidth: 1,
+										borderBottomColor: "#F1F1F1",
+										backgroundColor: pressed ? "#F5F5F4" : "transparent",
+									})}
+								>
+									<Text style={{ fontFamily: "DM Sans", fontSize: 15, color: "#1C1917" }}>{repo.name}</Text>
+								</Pressable>
+							))}
+						</ScrollView>
+					</View>
+				)}
 				<Text
 					style={{
 						fontFamily: "DM Sans",
@@ -111,7 +154,7 @@ export default function NewSessionScreen() {
 						marginBottom: 20,
 					}}
 				>
-					Last commit: 2 hours ago
+					{selectedRepo?.path ?? ""}
 				</Text>
 
 				{/* Branch Picker */}
@@ -127,6 +170,7 @@ export default function NewSessionScreen() {
 					Branch
 				</Text>
 				<Pressable
+					onPress={() => setShowBranchPicker(!showBranchPicker)}
 					style={{
 						flexDirection: "row",
 						alignItems: "center",
@@ -150,6 +194,29 @@ export default function NewSessionScreen() {
 					</Text>
 					<Feather name="chevron-down" size={18} color="#78716C" />
 				</Pressable>
+				{showBranchPicker && (
+					<View style={{ borderWidth: 1, borderColor: "#D6D3D1", borderRadius: 12, marginBottom: 8, maxHeight: 200, overflow: "hidden" }}>
+						<ScrollView nestedScrollEnabled>
+							{branches.map((branch) => (
+								<Pressable
+									key={branch}
+									onPress={() => {
+										setSelectedBranch(branch);
+										setShowBranchPicker(false);
+									}}
+									style={({ pressed }) => ({
+										padding: 14,
+										borderBottomWidth: 1,
+										borderBottomColor: "#F1F1F1",
+										backgroundColor: pressed ? "#F5F5F4" : "transparent",
+									})}
+								>
+									<Text style={{ fontFamily: "DM Sans", fontSize: 15, color: "#1C1917" }}>{branch}</Text>
+								</Pressable>
+							))}
+						</ScrollView>
+					</View>
+				)}
 
 				{/* Prompt */}
 				<Text
@@ -284,12 +351,16 @@ export default function NewSessionScreen() {
 				{/* Launch Button */}
 				<Pressable
 					onPress={() => {
-						// TODO: Call tRPC mutation to create session
-						// trpc.sessions.create.mutate({ repoId, branch, prompt, mode });
-						router.back();
+						if (!selectedRepo || !prompt.trim()) return;
+						createSession.mutate({
+							repoName: selectedRepo.name,
+							branch: selectedBranch,
+							prompt: prompt.trim(),
+							mode,
+						});
 					}}
 					style={({ pressed }) => ({
-						backgroundColor: "#EA580C",
+						backgroundColor: createSession.isPending ? "#A8A29E" : "#EA580C",
 						borderRadius: 16,
 						paddingVertical: 16,
 						flexDirection: "row",
