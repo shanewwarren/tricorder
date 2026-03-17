@@ -176,6 +176,8 @@ Server config file (`~/.tricorder/config.json`):
 
 ### 2. Mobile App
 
+**Design Source of Truth:** `application-design.pen` in the project root. This file contains all 8 screen mockups (Sessions List, Live Session View, Live Session Error/Handoff, New Session, Usage Dashboard, Activity Tab, Settings, Settings First Run) with exact layout, spacing, typography, and color tokens. When building mobile components, use Pencil MCP tools (`batch_get`, `get_screenshot`, `get_variables`) to read the .pen file and extract design details — node structure, padding values, font sizes, color variables, and component hierarchy. Each screen frame in the .pen file maps 1:1 to a React Native screen. Reference the .pen file node IDs and structure rather than guessing dimensions or styles.
+
 **Stack:** Expo (managed workflow), NativeWind (Tailwind CSS), Expo Router, TanStack Query via `@trpc/react-query`, Zustand (WebSocket stream state)
 
 **State Management Split:**
