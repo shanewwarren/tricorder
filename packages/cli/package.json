@@ -1,0 +1,12 @@
+{
+	"name": "@tricorder/cli",
+	"version": "0.0.1",
+	"private": true,
+	"bin": {
+		"tricorder": "src/index.ts"
+	},
+	"dependencies": {
+		"@tricorder/shared": "workspace:*",
+		"@trpc/client": "^11.0.0"
+	}
+}
