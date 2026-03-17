@@ -1,94 +1,10 @@
 import { Feather } from "@expo/vector-icons";
-import React from "react";
+import React, { useMemo } from "react";
 import { FlatList, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { trpc } from "@/src/lib/trpc";
 
-type EventType = "completed" | "approval" | "error" | "started" | "paused";
-
-interface ActivityEvent {
-	id: string;
-	type: EventType;
-	sessionName: string;
-	description: string;
-	timestamp: string;
-}
-
-interface ActivityGroup {
-	title: string;
-	data: ActivityEvent[];
-}
-
-// TODO: Replace mock data with tRPC query
-// const { data: activity } = trpc.activity.list.useQuery();
-
-const MOCK_ACTIVITY: ActivityGroup[] = [
-	{
-		title: "TODAY",
-		data: [
-			{
-				id: "1",
-				type: "completed",
-				sessionName: "Add pagination to API",
-				description: "Session completed successfully",
-				timestamp: "2h ago",
-			},
-			{
-				id: "2",
-				type: "approval",
-				sessionName: "Fix auth middleware",
-				description: "Needs approval: Edit auth.ts",
-				timestamp: "3h ago",
-			},
-			{
-				id: "3",
-				type: "error",
-				sessionName: "Update CI pipeline",
-				description: "Session errored: build failed",
-				timestamp: "15m ago",
-			},
-			{
-				id: "4",
-				type: "started",
-				sessionName: "Refactor database layer",
-				description: "Session started",
-				timestamp: "22m ago",
-			},
-			{
-				id: "5",
-				type: "paused",
-				sessionName: "Add unit tests",
-				description: "Session paused by user",
-				timestamp: "1h ago",
-			},
-		],
-	},
-	{
-		title: "YESTERDAY",
-		data: [
-			{
-				id: "6",
-				type: "completed",
-				sessionName: "Setup ESLint config",
-				description: "Session completed successfully",
-				timestamp: "18h ago",
-			},
-			{
-				id: "7",
-				type: "error",
-				sessionName: "Migrate to TypeScript",
-				description: "Session errored: type conflicts",
-				timestamp: "7h ago",
-			},
-			{
-				id: "8",
-				type: "completed",
-				sessionName: "Add dark mode support",
-				description: "Session completed successfully",
-				timestamp: "1d ago",
-			},
-		],
-	},
-];
+type EventType = "completed" | "approval" | "error" | "started" | "paused" | "cancelled";
 
 const EVENT_CONFIG: Record<EventType, { icon: keyof typeof Feather.glyphMap; color: string }> = {
 	completed: { icon: "check-circle", color: "#16A34A" },
@@ -96,9 +12,59 @@ const EVENT_CONFIG: Record<EventType, { icon: keyof typeof Feather.glyphMap; col
 	error: { icon: "x-circle", color: "#DC2626" },
 	started: { icon: "play-circle", color: "#2563EB" },
 	paused: { icon: "pause-circle", color: "#78716C" },
+	cancelled: { icon: "minus-circle", color: "#78716C" },
 };
 
-function EventRow({ event }: { event: ActivityEvent }) {
+function mapEventType(serverType: string): EventType {
+	switch (serverType) {
+		case "created": return "started";
+		case "errored": return "error";
+		case "approval_requested": return "approval";
+		default: return serverType as EventType;
+	}
+}
+
+function formatRelativeTime(isoString: string): string {
+	const diff = Date.now() - new Date(isoString).getTime();
+	const minutes = Math.floor(diff / 60000);
+	if (minutes < 60) return `${minutes}m ago`;
+	const hours = Math.floor(minutes / 60);
+	if (hours < 24) return `${hours}h ago`;
+	const days = Math.floor(hours / 24);
+	return `${days}d ago`;
+}
+
+function groupByDate(events: Array<{ id: string; sessionName: string; type: string; description: string; timestamp: string }>): (string | { id: string; sessionName: string; type: EventType; description: string; timestamp: string })[] {
+	const now = new Date();
+	const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+	const yesterday = new Date(today.getTime() - 86400000);
+
+	const groups: Record<string, typeof events> = {};
+
+	for (const event of events) {
+		const eventDate = new Date(event.timestamp);
+		const eventDay = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+
+		let label: string;
+		if (eventDay >= today) label = "TODAY";
+		else if (eventDay >= yesterday) label = "YESTERDAY";
+		else label = eventDay.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+		if (!groups[label]) groups[label] = [];
+		groups[label].push(event);
+	}
+
+	const flat: (string | { id: string; sessionName: string; type: EventType; description: string; timestamp: string })[] = [];
+	for (const [label, items] of Object.entries(groups)) {
+		flat.push(label);
+		for (const item of items) {
+			flat.push({ ...item, type: mapEventType(item.type) });
+		}
+	}
+	return flat;
+}
+
+function EventRow({ event }: { event: { id: string; sessionName: string; type: EventType; description: string; timestamp: string } }) {
 	const config = EVENT_CONFIG[event.type];
 
 	return (
@@ -143,7 +109,7 @@ function EventRow({ event }: { event: ActivityEvent }) {
 					color: "#A8A29E",
 				}}
 			>
-				{event.timestamp}
+				{formatRelativeTime(event.timestamp)}
 			</Text>
 		</View>
 	);
@@ -151,14 +117,12 @@ function EventRow({ event }: { event: ActivityEvent }) {
 
 export default function ActivityScreen() {
 	const insets = useSafeAreaInsets();
+	const { data: events, isLoading } = trpc.activity.list.useQuery();
 
-	const flatData: (string | ActivityEvent)[] = [];
-	for (const group of MOCK_ACTIVITY) {
-		flatData.push(group.title);
-		for (const event of group.data) {
-			flatData.push(event);
-		}
-	}
+	const flatData = useMemo(() => {
+		if (!events) return [];
+		return groupByDate(events);
+	}, [events]);
 
 	return (
 		<View
@@ -214,6 +178,13 @@ export default function ActivityScreen() {
 				}}
 				contentContainerStyle={{ paddingBottom: 100 }}
 				showsVerticalScrollIndicator={false}
+				ListEmptyComponent={
+					<View style={{ paddingTop: 40, alignItems: "center" }}>
+						<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#A8A29E" }}>
+							{isLoading ? "Loading activity..." : "No activity yet"}
+						</Text>
+					</View>
+				}
 			/>
 		</View>
 	);
