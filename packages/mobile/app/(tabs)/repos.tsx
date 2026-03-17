@@ -1,53 +1,11 @@
+import { trpc } from "@/src/lib/trpc";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-interface Repo {
-	id: string;
-	name: string;
-	defaultBranch: string;
-	lastCommitDate: string;
-}
-
-// TODO: Replace mock data with tRPC query
-// const { data: repos } = trpc.repos.list.useQuery();
-
-const MOCK_REPOS: Repo[] = [
-	{
-		id: "1",
-		name: "api-service",
-		defaultBranch: "main",
-		lastCommitDate: "2 hours ago",
-	},
-	{
-		id: "2",
-		name: "auth-module",
-		defaultBranch: "main",
-		lastCommitDate: "5 hours ago",
-	},
-	{
-		id: "3",
-		name: "backend-core",
-		defaultBranch: "develop",
-		lastCommitDate: "1 day ago",
-	},
-	{
-		id: "4",
-		name: "shared-utils",
-		defaultBranch: "main",
-		lastCommitDate: "3 days ago",
-	},
-	{
-		id: "5",
-		name: "worker-service",
-		defaultBranch: "main",
-		lastCommitDate: "1 week ago",
-	},
-];
-
-function RepoCard({ repo }: { repo: Repo }) {
+function RepoCard({ repo }: { repo: { name: string; path: string; defaultBranch: string; lastCommitDate: string | null } }) {
 	const router = useRouter();
 
 	return (
@@ -119,7 +77,7 @@ function RepoCard({ repo }: { repo: Repo }) {
 								color: "#A8A29E",
 							}}
 						>
-							{repo.lastCommitDate}
+							{repo.lastCommitDate ?? "No commits"}
 						</Text>
 					</View>
 				</View>
@@ -131,6 +89,7 @@ function RepoCard({ repo }: { repo: Repo }) {
 
 export default function ReposScreen() {
 	const insets = useSafeAreaInsets();
+	const { data: repos, isLoading } = trpc.repos.list.useQuery();
 
 	return (
 		<View
@@ -161,15 +120,18 @@ export default function ReposScreen() {
 			</View>
 
 			<FlatList
-				data={MOCK_REPOS}
-				keyExtractor={(item) => item.id}
+				data={repos ?? []}
+				keyExtractor={(item) => item.path}
 				renderItem={({ item }) => <RepoCard repo={item} />}
-				contentContainerStyle={{
-					paddingHorizontal: 21,
-					paddingBottom: 100,
-					gap: 12,
-				}}
+				contentContainerStyle={{ paddingHorizontal: 21, paddingBottom: 100, gap: 12 }}
 				showsVerticalScrollIndicator={false}
+				ListEmptyComponent={
+					<View style={{ paddingTop: 40, alignItems: "center" }}>
+						<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#A8A29E" }}>
+							{isLoading ? "Loading repos..." : "No repos found"}
+						</Text>
+					</View>
+				}
 			/>
 		</View>
 	);
