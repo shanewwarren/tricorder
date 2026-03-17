@@ -26,6 +26,8 @@ export default function SessionsScreen() {
 	const [activeSegment, setActiveSegment] = useState(0);
 
 	const { data: serverSessions, isLoading } = trpc.sessions.list.useQuery();
+	const { data: usage } = trpc.usage.current.useQuery();
+	const usagePercentage = usage?.available ? (usage.tiers[0]?.percentage ?? 0) : 0;
 
 	// Map server status to UI status
 	const sessions = useMemo(() => {
@@ -77,7 +79,7 @@ export default function SessionsScreen() {
 					Sessions
 				</Text>
 
-				<UsageIndicator percentage={3} />
+				<UsageIndicator percentage={usagePercentage} />
 
 				<Pressable
 					style={{

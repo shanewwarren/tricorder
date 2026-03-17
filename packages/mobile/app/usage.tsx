@@ -1,16 +1,15 @@
 import { UsageCard } from "@/src/components/UsageCard";
+import { trpc } from "@/src/lib/trpc";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// TODO: Replace mock data with tRPC query
-// const { data: usage } = trpc.usage.current.useQuery();
-
 export default function UsageScreen() {
 	const router = useRouter();
 	const insets = useSafeAreaInsets();
+	const { data: usage, isLoading } = trpc.usage.current.useQuery();
 
 	return (
 		<View
@@ -53,12 +52,27 @@ export default function UsageScreen() {
 				</View>
 
 				{/* Usage Cards */}
-				<View style={{ gap: 16 }}>
-					<UsageCard label="Session" subtitle="5-hour window" percentage={3} resetIn="4h 32m" />
-					<UsageCard label="Weekly" subtitle="7-day window" percentage={12} resetIn="4d 2h" />
-					<UsageCard label="Sonnet Only" subtitle="Model-specific" percentage={67} resetIn="4d 2h" />
-					<UsageCard label="Overage" subtitle="Extra usage this month" dollarAmount={9.57} dollarLimit={50} />
-				</View>
+				{!usage?.available ? (
+					<View style={{ paddingTop: 40, alignItems: "center" }}>
+						<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#A8A29E" }}>
+							{isLoading ? "Loading usage..." : "Usage data unavailable"}
+						</Text>
+					</View>
+				) : (
+					<View style={{ gap: 16 }}>
+						{usage.tiers.map((tier) => (
+							<UsageCard
+								key={tier.label}
+								label={tier.label}
+								subtitle={tier.subtitle}
+								percentage={tier.dollarAmount == null ? tier.percentage : undefined}
+								resetIn={tier.resetIn ?? undefined}
+								dollarAmount={tier.dollarAmount ?? undefined}
+								dollarLimit={tier.dollarLimit ?? undefined}
+							/>
+						))}
+					</View>
+				)}
 			</ScrollView>
 		</View>
 	);
