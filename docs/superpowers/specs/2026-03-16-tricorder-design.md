@@ -83,6 +83,9 @@ localSessions.takeover — resume a terminal session via Agent SDK
 
 usage.current       — current usage data (session, weekly, model-specific, overage)
 
+activity.list       — chronological event feed across all sessions, grouped by date
+                       events: session created, completed, errored, paused, approval requested
+
 config.get          — current server configuration
 ```
 
@@ -179,11 +182,12 @@ Server config file (`~/.tricorder/config.json`):
 - **TanStack Query (via tRPC)** — all request/response data: repo lists, session lists, session details, usage, config
 - **Zustand** — live WebSocket stream state: active message buffer per session, connection status, last seen index for reconnection
 
-**Navigation:** Bottom tab bar with three tabs:
+**Navigation:** Bottom pill-shaped tab bar with four tabs:
 
-1. **Sessions** — session list + live viewer
-2. **Repos** — browse available repositories
-3. **Config** — server settings + defaults
+1. **Home** — session list + live viewer (house icon)
+2. **Activity** — chronological event feed across all sessions (activity icon)
+3. **Repos** — browse available repositories (compass icon)
+4. **Settings** — server settings + defaults (user icon)
 
 **Screens:**
 
@@ -217,7 +221,19 @@ On reconnection after disconnect, the live view auto-scrolls to the first pendin
 
 Bottom bar: text input for follow-up messages.
 
-When paused/completed: bottom bar replaced with handoff banner showing copyable `tricorder resume <name>` command.
+When paused/completed: bottom bar replaced with handoff banner showing "CONTINUE ON YOUR MACHINE" label and copyable `tricorder resume <name>` command with clipboard icon.
+
+**Error state:** Session header shows red "ERROR" status pill. Pause/Cancel buttons replaced with a "Retry" button (teal). Message stream shows the full conversation up to the error. Handoff banner still available at the bottom.
+
+**Activity Tab**
+
+Chronological event feed across all sessions, grouped by date (Today, Yesterday, etc.). Each event row shows:
+- Color-coded status icon: green check (completed), orange circle (needs approval), red circle (error), blue circle (started), gray circle (paused)
+- Session title (bold)
+- Event description: "Session completed successfully", "Needs approval: Edit auth.ts", "Session errored: build failed", "Session started", "Session paused by user"
+- Relative timestamp (e.g., "2h ago", "15m ago")
+
+This provides a quick at-a-glance view of what's happening across all sessions without needing to tap into each one.
 
 **New Session**
 
@@ -249,7 +265,15 @@ First-run experience: the app prompts for the server's Tailscale IP and port (e.
 
 **Persistent Usage Header**
 
-Visible on all screens. Green dot + percentage (e.g., "3%"). Color shifts: green (0-60%), yellow (60-85%), red (85-100%). Tapping opens the full usage dashboard.
+Visible on all screens in the header area (next to bell and "+" buttons). Green dot + percentage in JetBrains Mono (e.g., "3%"). Pill-shaped with card background. Color shifts: green (0-60%), yellow (60-85%), red (85-100%). Tapping navigates to the full usage dashboard.
+
+**Design System**
+
+Typography: DM Sans (headings, body), JetBrains Mono (code, status badges, repo names, technical labels), Inter (system status bar).
+
+Color tokens (from .pen file variables): `$bg-page`, `$bg-card`, `$bg-elevated`, `$text-primary`, `$text-secondary`, `$text-tertiary`, `$text-on-accent`, `$accent-terracotta`, `$accent-terracotta-light`, `$accent-teal`, `$border-subtle`, `$status-running` (green), `$status-waiting` (amber), `$status-paused` (orange), `$status-completed` (gray), `$status-local` (blue), `$status-cancel` (red).
+
+Components: cards with 16px corner radius, 16x18 padding. Status pills with 6px radius, monospace text. Mode badges with terracotta-light background. Pill-shaped tab bar with 36px corner radius. Buttons with 8-14px corner radius.
 
 ### 3. CLI
 
