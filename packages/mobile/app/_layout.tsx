@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/components/useColorScheme";
+import { TrpcProvider } from "@/src/lib/TrpcProvider";
 import "../global.css";
 
 export {
@@ -48,14 +49,16 @@ function RootLayoutNav() {
 	const colorScheme = useColorScheme();
 
 	return (
-		<ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-			<Stack>
-				<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-				<Stack.Screen name="session/[id]" options={{ headerShown: false }} />
-				<Stack.Screen name="new-session" options={{ headerShown: false }} />
-				<Stack.Screen name="usage" options={{ headerShown: false }} />
-				<Stack.Screen name="modal" options={{ presentation: "modal" }} />
-			</Stack>
-		</ThemeProvider>
+		<TrpcProvider>
+			<ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+				<Stack>
+					<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+					<Stack.Screen name="session/[id]" options={{ headerShown: false }} />
+					<Stack.Screen name="new-session" options={{ headerShown: false }} />
+					<Stack.Screen name="usage" options={{ headerShown: false }} />
+					<Stack.Screen name="modal" options={{ presentation: "modal" }} />
+				</Stack>
+			</ThemeProvider>
+		</TrpcProvider>
 	);
 }
