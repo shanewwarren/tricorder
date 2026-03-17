@@ -11,6 +11,7 @@ import { SandboxService } from "./services/sandbox.service";
 import { WorktreeService } from "./services/worktree.service";
 import { UsageService } from "./services/usage.service";
 import { WatcherService } from "./services/watcher.service";
+import { CleanupService } from "./services/cleanup.service";
 
 export function createAppContainer(config: ServerConfig, db: Db) {
 	const container = createContainer({
@@ -30,6 +31,7 @@ export function createAppContainer(config: ServerConfig, db: Db) {
 		worktreeService: asClass(WorktreeService).singleton(),
 		usageService: asClass(UsageService).singleton(),
 		watcherService: asClass(WatcherService).singleton(),
+		cleanupService: asClass(CleanupService).singleton(),
 	});
 
 	return container;

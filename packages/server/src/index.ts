@@ -29,4 +29,7 @@ httpServer.listen(port, host);
 console.log(`Tricorder server listening on ${host}:${port}`);
 console.log(`Scanning repos in: ${config.scanDirectory}`);
 
+const cleanupService = container.resolve("cleanupService");
+cleanupService.start();
+
 export type { AppRouter } from "./routers";
