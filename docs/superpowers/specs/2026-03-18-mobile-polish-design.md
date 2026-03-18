@@ -10,7 +10,7 @@ The `config` object returned by `trpc.config.get.useQuery()` should be fully typ
 
 **Fix:** Remove all `(config as any)` casts and access `config.host`, `config.port`, `config.scanDirectory`, `config.defaultMode`, `config.plugins`, `config.mcpServers` directly. If tRPC inference doesn't resolve the types (unlikely but possible with the untyped Awilix container resolution), add an explicit `.output()` call on the config router procedure referencing the `serverConfig` zod schema.
 
-Also fix the `selectedMode` state initialization — `useState` only uses its argument on first render, so the server's `defaultMode` is ignored when it loads async. Add a `useEffect` to sync:
+Also fix the `selectedMode` state initialization — `useState` only uses its argument on first render, so the server's `defaultMode` is ignored when it loads async. Add `useEffect` to the React import and sync:
 
 ```ts
 useEffect(() => {
@@ -59,10 +59,13 @@ useEffect(() => {
   return () => clearInterval(interval);
 }, [isSessionActive]);
 
-// After the if (!session) guard:
+// After the if (!session) guard, use isActive (which is derived from session.status there):
 const elapsedSeconds = isActive
   ? Math.floor((now - new Date(session.createdAt).getTime()) / 1000)
   : Math.floor((new Date(session.updatedAt).getTime() - new Date(session.createdAt).getTime()) / 1000);
+```
+
+Note: `isSessionActive` (used above the guard for the hook) and `isActive` (used below the guard for rendering) both check `session?.status === "active"` — one is null-safe for the hook, the other assumes session exists. The `updatedAt` field exists in the sessions DB schema (`packages/server/src/db/schema.ts`, line 19) and is returned by the detail query.
 ```
 
 ## 4. Polling fallback when WebSocket disconnects
@@ -108,7 +111,7 @@ const sessions = useMemo(() => {
   const local = (localSessions ?? []).map((s) => ({
     id: s.id,
     name: s.name,
-    repoName: s.directory,
+    repoName: s.directory.split("/").pop() ?? s.directory,  // extract last path segment as display name
     mode: "interactive" as const,
     status: "local" as SessionStatus,
     lastActivity: s.active ? "Active in terminal" : "Idle",
@@ -134,6 +137,28 @@ const { id, local } = useLocalSearchParams<{ id: string; local?: string }>();
 const isLocalSession = local === "true";
 ```
 
-For local sessions, the detail view is read-only: no pause/cancel/send buttons, no stream subscription. Show the conversation history from `localSessions.detail` and a "Take Over" button that calls `localSessions.takeover`.
+For local sessions, the detail view is read-only: no pause/cancel/send buttons, no stream subscription. The `localSessions.detail` endpoint returns `{ id, name, directory, active, lastModified }` — filesystem metadata only, no conversation history. So the local session detail view shows:
 
-The `SessionCard` component needs an `isLocal` prop to pass through to navigation. The existing `"local terminal"` label display is already in `SessionCard` — it shows when `session.status === "local"`.
+- Session name and directory path in the header
+- Active/Idle status indicator
+- "Take Over" button that calls `localSessions.takeover` (available when session is idle, not when active in terminal)
+- No message stream (the server doesn't parse Claude's session JSON files — that's internal to Claude Code)
+
+**SessionCard interface update:** Add `isLocal?: boolean` to the `Session` interface in `packages/mobile/src/components/SessionCard.tsx`. Update the navigation `onPress` to pass the flag:
+
+```ts
+interface Session {
+  id: string;
+  name: string;
+  repoName: string;
+  mode: "autonomous" | "interactive";
+  status: SessionStatus;
+  lastActivity: string;
+  isLocal?: boolean;
+}
+
+// In the Pressable onPress:
+router.push(`/session/${session.id}?local=${session.isLocal ?? false}` as any);
+```
+
+The existing `"local terminal"` label display is already in `SessionCard` — it shows when `session.status === "local"`.
