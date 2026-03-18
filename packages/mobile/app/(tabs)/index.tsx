@@ -26,22 +26,34 @@ export default function SessionsScreen() {
 	const [activeSegment, setActiveSegment] = useState(0);
 
 	const { data: serverSessions, isLoading } = trpc.sessions.list.useQuery();
+	const { data: localSessions } = trpc.localSessions.list.useQuery();
 	const { data: usage } = trpc.usage.current.useQuery();
 	const usagePercentage = usage?.available ? (usage.tiers[0]?.percentage ?? 0) : 0;
 
-	// Map server status to UI status
+	// Map server + local sessions to unified UI shape
 	const sessions = useMemo(() => {
-		if (!serverSessions) return [];
-		return serverSessions.map((s) => ({
+		const mapped = (serverSessions ?? []).map((s) => ({
 			id: s.id,
 			name: s.name,
 			repoName: s.repoName,
 			mode: s.mode as "autonomous" | "interactive",
-			status: (s.status === "active" ? "running" : s.status === "cancelled" ? "completed" : s.status) as
-				"running" | "waiting" | "paused" | "completed" | "local" | "error",
+			status: (s.status === "active" ? "running" : s.status === "cancelled" ? "completed" : s.status) as SessionStatus,
 			lastActivity: s.lastActivity || s.lastError || "",
+			isLocal: false,
 		}));
-	}, [serverSessions]);
+
+		const local = (localSessions ?? []).map((s) => ({
+			id: s.id,
+			name: s.name,
+			repoName: s.directory.split("/").pop() ?? s.directory,
+			mode: "interactive" as const,
+			status: "local" as SessionStatus,
+			lastActivity: s.active ? "Active in terminal" : "Idle",
+			isLocal: true,
+		}));
+
+		return [...mapped, ...local];
+	}, [serverSessions, localSessions]);
 
 	const filteredSessions = useMemo(() => {
 		const allowedStatuses = SEGMENT_STATUS_MAP[SEGMENTS[activeSegment]];

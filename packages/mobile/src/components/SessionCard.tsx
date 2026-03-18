@@ -13,6 +13,7 @@ interface Session {
 	mode: "autonomous" | "interactive";
 	status: SessionStatus;
 	lastActivity: string;
+	isLocal?: boolean;
 }
 
 interface SessionCardProps {
@@ -25,7 +26,7 @@ export function SessionCard({ session }: SessionCardProps) {
 
 	return (
 		<Pressable
-			onPress={() => router.push(`/session/${session.id}` as any)}
+			onPress={() => router.push(`/session/${session.id}?local=${session.isLocal ?? false}` as any)}
 			style={({ pressed }) => ({
 				backgroundColor: "#F1F1F1",
 				borderRadius: 16,

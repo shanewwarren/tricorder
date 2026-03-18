@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { trpc } from "@/src/lib/trpc";
@@ -81,11 +81,13 @@ export default function SettingsScreen() {
 	const [portInput, setPortInput] = useState("3141");
 	const [editingConnection, setEditingConnection] = useState(false);
 
-	const defaultMode = (config as any)?.defaultMode ?? "autonomous";
-	const [selectedMode, setSelectedMode] = useState<Mode>(defaultMode);
+	const [selectedMode, setSelectedMode] = useState<Mode>("autonomous");
+	const plugins = config?.plugins ?? [];
+	const mcpServers = config?.mcpServers ?? {};
 
-	const plugins: string[] = (config as any)?.plugins ?? [];
-	const mcpServers: Record<string, any> = (config as any)?.mcpServers ?? {};
+	useEffect(() => {
+		if (config?.defaultMode) setSelectedMode(config.defaultMode);
+	}, [config?.defaultMode]);
 
 	return (
 		<View
@@ -195,7 +197,7 @@ export default function SettingsScreen() {
 				>
 					<SettingRow
 						label="Tailscale IP"
-						value={isConnected ? (config as any).host : undefined}
+						value={isConnected ? config?.host ?? "" : undefined}
 						rightElement={
 							!isConnected ? (
 								<Text
@@ -212,7 +214,7 @@ export default function SettingsScreen() {
 					/>
 					<SettingRow
 						label="Port"
-						value={isConnected ? String((config as any).port) : undefined}
+						value={isConnected ? String(config?.port ?? 3141) : undefined}
 						rightElement={
 							!isConnected ? (
 								<Text
@@ -324,7 +326,7 @@ export default function SettingsScreen() {
 							color: isConnected ? "#1C1917" : "#A8A29E",
 						}}
 					>
-						{isConnected ? (config as any).scanDirectory : "Select a directory..."}
+						{isConnected ? config?.scanDirectory ?? "" : "Select a directory..."}
 					</Text>
 					<Feather name="chevron-right" size={18} color="#78716C" />
 				</Pressable>
@@ -444,35 +446,44 @@ export default function SettingsScreen() {
 				{isConnected && (
 					<>
 						<SectionHeader title="MCP Servers" />
-						<View
-							style={{
-								backgroundColor: "#F1F1F1",
-								borderRadius: 12,
-								paddingHorizontal: 14,
-							}}
-						>
-							{Object.entries(mcpServers).map(([name, server]: [string, any], i: number, arr: [string, any][]) => (
-								<View
-									key={name}
-									style={{
-										flexDirection: "row",
-										alignItems: "center",
-										paddingVertical: 14,
-										borderBottomWidth: i < arr.length - 1 ? 1 : 0,
-										borderBottomColor: "#E7E5E4",
-										gap: 10,
-									}}
-								>
-									<Feather name="server" size={16} color="#1C1917" />
-									<View style={{ flex: 1 }}>
-										<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#1C1917" }}>{name}</Text>
-										<Text style={{ fontFamily: "DM Sans", fontSize: 12, color: "#78716C", marginTop: 2 }}>
-											{server.command}
-										</Text>
+						{Object.keys(mcpServers).length === 0 ? (
+							<View style={{ backgroundColor: "#F1F1F1", borderRadius: 12, padding: 20, alignItems: "center" }}>
+								<Feather name="server" size={20} color="#A8A29E" style={{ marginBottom: 6 }} />
+								<Text style={{ fontFamily: "DM Sans", fontSize: 13, color: "#A8A29E" }}>
+									No MCP servers configured
+								</Text>
+							</View>
+						) : (
+							<View
+								style={{
+									backgroundColor: "#F1F1F1",
+									borderRadius: 12,
+									paddingHorizontal: 14,
+								}}
+							>
+								{Object.entries(mcpServers).map(([name, server], i, arr) => (
+									<View
+										key={name}
+										style={{
+											flexDirection: "row",
+											alignItems: "center",
+											paddingVertical: 14,
+											borderBottomWidth: i < arr.length - 1 ? 1 : 0,
+											borderBottomColor: "#E7E5E4",
+											gap: 10,
+										}}
+									>
+										<Feather name="server" size={16} color="#1C1917" />
+										<View style={{ flex: 1 }}>
+											<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#1C1917" }}>{name}</Text>
+											<Text style={{ fontFamily: "DM Sans", fontSize: 12, color: "#78716C", marginTop: 2 }}>
+												{server.command}
+											</Text>
+										</View>
 									</View>
-								</View>
-							))}
-						</View>
+								))}
+							</View>
+						)}
 					</>
 				)}
 			</ScrollView>
