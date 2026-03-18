@@ -8,7 +8,7 @@ import { trpc } from "@/src/lib/trpc";
 import { useStreamStore } from "@/src/lib/store";
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -52,9 +52,12 @@ export default function SessionScreen() {
 		};
 	}, [id]);
 
+	// Capture initial lastSeenIndex to avoid reconnect loops when store updates
+	const initialLastSeenIndex = useRef(stream?.lastSeenIndex ?? 0);
+
 	// Subscribe to live messages
 	trpc.sessions.stream.useSubscription(
-		{ id: id!, lastSeenIndex: stream?.lastSeenIndex ?? 0 },
+		{ id: id!, lastSeenIndex: initialLastSeenIndex.current },
 		{
 			enabled: !!id && !!stream,
 			onData: (message) => {
@@ -85,6 +88,17 @@ export default function SessionScreen() {
 		{ enabled: !!session && session.status !== "active" }
 	);
 
+	// Use stream messages if connected, fall back to query messages
+	const displayMessages = useMemo(() => {
+		if (stream?.connected && stream.messages.length > 0) return stream.messages;
+		return messages;
+	}, [stream?.connected, stream?.messages, messages]);
+
+	// Auto-scroll to bottom when messages change
+	useEffect(() => {
+		setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+	}, [displayMessages.length]);
+
 	if (!session) {
 		return (
 			<View style={{ flex: 1, backgroundColor: "#FAFAF9", justifyContent: "center", alignItems: "center" }}>
@@ -92,11 +106,6 @@ export default function SessionScreen() {
 			</View>
 		);
 	}
-
-	// Use stream messages if connected, fall back to query messages
-	const displayMessages = stream?.connected && stream.messages.length > 0
-		? stream.messages
-		: messages;
 
 	const isActive = session.status === "active";
 	const isError = session.status === "error";
@@ -110,11 +119,6 @@ export default function SessionScreen() {
 
 	// Calculate elapsed time from createdAt
 	const elapsedSeconds = Math.floor((Date.now() - new Date(session.createdAt).getTime()) / 1000);
-
-	// Auto-scroll to bottom when messages change
-	useEffect(() => {
-		setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
-	}, [displayMessages.length]);
 
 	const handleSend = () => {
 		if (!inputText.trim()) return;
