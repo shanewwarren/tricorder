@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,6 +10,7 @@ type Mode = "autonomous" | "interactive";
 export default function NewSessionScreen() {
 	const router = useRouter();
 	const insets = useSafeAreaInsets();
+	const params = useLocalSearchParams<{ repo?: string; path?: string; branch?: string }>();
 
 	const { data: repos } = trpc.repos.list.useQuery();
 	const [selectedRepo, setSelectedRepo] = useState<{ name: string; path: string; defaultBranch: string } | null>(null);
@@ -39,11 +40,15 @@ export default function NewSessionScreen() {
 	});
 
 	useEffect(() => {
-		if (repos?.length && !selectedRepo) {
+		// Pre-select repo from query params (e.g. navigating from Repos tab)
+		if (params.repo && params.path && !selectedRepo) {
+			setSelectedRepo({ name: params.repo, path: params.path, defaultBranch: params.branch ?? "main" });
+			setSelectedBranch(params.branch ?? "main");
+		} else if (repos?.length && !selectedRepo) {
 			setSelectedRepo(repos[0]);
 			setSelectedBranch(repos[0].defaultBranch);
 		}
-	}, [repos]);
+	}, [repos, params.repo]);
 
 	return (
 		<View

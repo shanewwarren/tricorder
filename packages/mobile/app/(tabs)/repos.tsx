@@ -11,8 +11,7 @@ function RepoCard({ repo }: { repo: { name: string; path: string; defaultBranch:
 	return (
 		<Pressable
 			onPress={() => {
-				// TODO: Navigate to new-session with repo pre-selected
-				router.push("/new-session" as any);
+				router.push(`/new-session?repo=${encodeURIComponent(repo.name)}&path=${encodeURIComponent(repo.path)}&branch=${encodeURIComponent(repo.defaultBranch)}` as any);
 			}}
 			style={({ pressed }) => ({
 				backgroundColor: "#F1F1F1",
