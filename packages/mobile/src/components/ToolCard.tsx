@@ -32,11 +32,11 @@ export function ToolCard({ type, title, detail, diff, result }: ToolCardProps) {
 			{/* Header row */}
 			<Pressable className="flex-row items-center gap-2">
 				<Feather name={icon} size={16} color="#78716C" />
-				<Text className="font-dm-sans text-sm font-semibold text-text-dark">
+				<Text className="font-dm-sans text-sm font-semibold text-ink-dark">
 					{title}
 				</Text>
 				<Text
-					className="font-jetbrains text-xs text-text-secondary flex-1"
+					className="font-jetbrains text-xs text-ink-secondary flex-1"
 					numberOfLines={1}
 				>
 					{detail}

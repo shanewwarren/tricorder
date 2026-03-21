@@ -52,7 +52,7 @@ export default function SessionsScreen() {
 		>
 			{/* Header */}
 			<View className="flex-row items-center px-[21px] pt-4 pb-3">
-				<Text className="font-dm-sans text-4xl font-bold text-primary flex-1">
+				<Text className="font-dm-sans text-4xl font-bold text-ink-primary flex-1">
 					Sessions
 				</Text>
 

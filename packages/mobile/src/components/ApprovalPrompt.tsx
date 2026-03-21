@@ -14,13 +14,13 @@ export function ApprovalPrompt({ action, onApprove, onDeny }: ApprovalPromptProp
 			{/* Header */}
 			<View className="flex-row items-center gap-2">
 				<Feather name="shield" size={16} color="#EA580C" />
-				<Text className="font-dm-sans text-base font-semibold text-text-dark">
+				<Text className="font-dm-sans text-base font-semibold text-ink-dark">
 					Claude wants to:
 				</Text>
 			</View>
 
 			{/* Action description */}
-			<Text className="font-jetbrains text-sm text-text-secondary leading-[18px]">
+			<Text className="font-jetbrains text-sm text-ink-secondary leading-[18px]">
 				{action}
 			</Text>
 

@@ -9,11 +9,11 @@ module.exports = {
 				"bg-page": "#FAFAF9",
 				"bg-card": "#F1F1F1",
 				"bg-elevated": "#FFFFFF",
-				// Text
-				"text-primary": "#1C1917",
-				"text-dark": "#292524",
-				"text-secondary": "#78716C",
-				"text-tertiary": "#A8A29E",
+				// Text (use ink-* to avoid collision with Tailwind's text-primary utility)
+				"ink-primary": "#1C1917",
+				"ink-dark": "#292524",
+				"ink-secondary": "#78716C",
+				"ink-tertiary": "#A8A29E",
 				// Accent
 				primary: "#EA580C",
 				"primary-pressed": "#D35407",

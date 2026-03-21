@@ -26,7 +26,7 @@ export function HandoffBanner({ command }: HandoffBannerProps) {
 			{/* Code block */}
 			<View className="bg-card rounded py-2.5 px-3.5 flex-row items-center">
 				<Text
-					className="font-jetbrains text-base text-text-dark flex-1"
+					className="font-jetbrains text-base text-ink-dark flex-1"
 					numberOfLines={1}
 				>
 					{command}

@@ -22,7 +22,7 @@ function RepoCard({ repo }: { repo: { name: string; path: string; defaultBranch:
 				<View className="flex-1">
 					<View className="flex-row items-center gap-2 mb-1.5">
 						<Feather name="folder" size={16} color="#EA580C" />
-						<Text className="font-dm-sans text-lg font-semibold text-primary">
+						<Text className="font-dm-sans text-lg font-semibold text-ink-primary">
 							{repo.name}
 						</Text>
 					</View>
@@ -56,7 +56,7 @@ export default function ReposScreen() {
 		>
 			{/* Header */}
 			<View className="px-[21px] pt-4 pb-3">
-				<Text className="font-dm-sans text-4xl font-bold text-primary">
+				<Text className="font-dm-sans text-4xl font-bold text-ink-primary">
 					Repos
 				</Text>
 			</View>

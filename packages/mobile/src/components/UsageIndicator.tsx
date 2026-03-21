@@ -25,7 +25,7 @@ export function UsageIndicator({ percentage }: UsageIndicatorProps) {
 				className="w-2 h-2 rounded-full"
 				style={{ backgroundColor: dotColor }}
 			/>
-			<Text className="font-jetbrains text-sm font-bold text-text-dark">
+			<Text className="font-jetbrains text-sm font-bold text-ink-dark">
 				{percentage}%
 			</Text>
 		</Pressable>

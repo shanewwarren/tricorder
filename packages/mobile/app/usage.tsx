@@ -28,7 +28,7 @@ export default function UsageScreen() {
 					<Pressable onPress={() => router.back()}>
 						<Feather name="arrow-left" size={24} color="#1C1917" />
 					</Pressable>
-					<Text className="font-dm-sans text-3xl font-bold text-primary">
+					<Text className="font-dm-sans text-3xl font-bold text-ink-primary">
 						Usage
 					</Text>
 				</View>

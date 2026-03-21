@@ -67,13 +67,13 @@ export default function NewSessionScreen() {
 					<Pressable onPress={() => router.back()}>
 						<Feather name="arrow-left" size={24} color="#1C1917" />
 					</Pressable>
-					<Text className="font-dm-sans text-3xl font-bold text-primary">
+					<Text className="font-dm-sans text-3xl font-bold text-ink-primary">
 						New Session
 					</Text>
 				</View>
 
 				{/* Repository Picker */}
-				<Text className="font-dm-sans text-md font-semibold text-primary mb-2">
+				<Text className="font-dm-sans text-md font-semibold text-ink-primary mb-2">
 					Repository
 				</Text>
 				<Pressable
@@ -81,7 +81,7 @@ export default function NewSessionScreen() {
 					className="flex-row items-center border border-border-default rounded-lg p-3.5 mb-1"
 				>
 					<Feather name="git-merge" size={18} color="#EA580C" style={{ marginRight: 10 }} />
-					<Text className="font-dm-sans text-lg text-primary flex-1">
+					<Text className="font-dm-sans text-lg text-ink-primary flex-1">
 						{selectedRepo?.name ?? "Select a repository"}
 					</Text>
 					<Feather name="chevron-down" size={18} color="#78716C" />
@@ -102,7 +102,7 @@ export default function NewSessionScreen() {
 										backgroundColor: pressed ? "#F5F5F4" : "transparent",
 									})}
 								>
-									<Text className="font-dm-sans text-lg text-primary">{repo.name}</Text>
+									<Text className="font-dm-sans text-lg text-ink-primary">{repo.name}</Text>
 								</Pressable>
 							))}
 						</ScrollView>
@@ -113,7 +113,7 @@ export default function NewSessionScreen() {
 				</Text>
 
 				{/* Branch Picker */}
-				<Text className="font-dm-sans text-md font-semibold text-primary mb-2">
+				<Text className="font-dm-sans text-md font-semibold text-ink-primary mb-2">
 					Branch
 				</Text>
 				<Pressable
@@ -121,7 +121,7 @@ export default function NewSessionScreen() {
 					className="flex-row items-center border border-border-default rounded-lg p-3.5 mb-5"
 				>
 					<Feather name="git-branch" size={18} color="#EA580C" style={{ marginRight: 10 }} />
-					<Text className="font-dm-sans text-lg text-primary flex-1">
+					<Text className="font-dm-sans text-lg text-ink-primary flex-1">
 						{selectedBranch}
 					</Text>
 					<Feather name="chevron-down" size={18} color="#78716C" />
@@ -141,7 +141,7 @@ export default function NewSessionScreen() {
 										backgroundColor: pressed ? "#F5F5F4" : "transparent",
 									})}
 								>
-									<Text className="font-dm-sans text-lg text-primary">{branch}</Text>
+									<Text className="font-dm-sans text-lg text-ink-primary">{branch}</Text>
 								</Pressable>
 							))}
 						</ScrollView>
@@ -149,11 +149,11 @@ export default function NewSessionScreen() {
 				)}
 
 				{/* Prompt */}
-				<Text className="font-dm-sans text-md font-semibold text-primary mb-2">
+				<Text className="font-dm-sans text-md font-semibold text-ink-primary mb-2">
 					Prompt
 				</Text>
 				<TextInput
-					className="border border-border-default rounded-lg p-3.5 font-dm-sans text-lg text-primary min-h-[120px]"
+					className="border border-border-default rounded-lg p-3.5 font-dm-sans text-lg text-ink-primary min-h-[120px]"
 					style={{ textAlignVertical: "top" }}
 					placeholder="What do you want Claude to do?"
 					placeholderTextColor="#A8A29E"
@@ -166,7 +166,7 @@ export default function NewSessionScreen() {
 				</Text>
 
 				{/* Mode Toggle */}
-				<Text className="font-dm-sans text-md font-semibold text-primary mb-[10px]">
+				<Text className="font-dm-sans text-md font-semibold text-ink-primary mb-[10px]">
 					Mode
 				</Text>
 				<View className="flex-row gap-3 mb-7">

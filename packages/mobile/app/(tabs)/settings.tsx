@@ -26,12 +26,12 @@ function SettingRow({
 }) {
 	return (
 		<View className="flex-row items-center justify-between py-3.5 border-b border-b-card">
-			<Text className="font-dm-sans text-md text-primary">
+			<Text className="font-dm-sans text-md text-ink-primary">
 				{label}
 			</Text>
 			{rightElement ??
 				(value ? (
-					<Text className="font-jetbrains text-md text-primary">
+					<Text className="font-jetbrains text-md text-ink-primary">
 						{value}
 					</Text>
 				) : null)}
@@ -71,7 +71,7 @@ export default function SettingsScreen() {
 			>
 				{/* Header */}
 				<View className="flex-row items-center pt-4 pb-3 gap-3">
-					<Text className="font-dm-sans text-4xl font-bold text-primary">
+					<Text className="font-dm-sans text-4xl font-bold text-ink-primary">
 						Settings
 					</Text>
 				</View>
@@ -93,7 +93,7 @@ export default function SettingsScreen() {
 							className="bg-elevated rounded-lg py-[10px] items-center flex-row justify-center gap-1.5"
 						>
 							<Feather name="link" size={16} color="#EA580C" />
-							<Text className="font-dm-sans text-md font-bold text-primary">
+							<Text className="font-dm-sans text-md font-bold text-ink-primary">
 								Connect Server
 							</Text>
 						</Pressable>
@@ -162,7 +162,7 @@ export default function SettingsScreen() {
 							onChangeText={setIpInput}
 							placeholder="100.x.x.x"
 							placeholderTextColor="#A8A29E"
-							className="border border-border-default rounded-lg p-3.5 font-jetbrains text-md text-primary"
+							className="border border-border-default rounded-lg p-3.5 font-jetbrains text-md text-ink-primary"
 						/>
 						<TextInput
 							value={portInput}
@@ -170,7 +170,7 @@ export default function SettingsScreen() {
 							placeholder="3141"
 							placeholderTextColor="#A8A29E"
 							keyboardType="number-pad"
-							className="border border-border-default rounded-lg p-3.5 font-jetbrains text-md text-primary"
+							className="border border-border-default rounded-lg p-3.5 font-jetbrains text-md text-ink-primary"
 						/>
 						<Pressable
 							onPress={() => {
@@ -190,7 +190,7 @@ export default function SettingsScreen() {
 
 				{isConnected && !editingConnection && (
 					<Pressable onPress={() => setEditingConnection(true)} className="mt-2">
-						<Text className="font-dm-sans text-base text-primary">
+						<Text className="font-dm-sans text-base text-ink-primary">
 							Change server
 						</Text>
 					</Pressable>
@@ -261,7 +261,7 @@ export default function SettingsScreen() {
 								}}
 							>
 								<Feather name="package" size={16} color="#1C1917" />
-								<Text className="font-dm-sans text-md text-primary flex-1">
+								<Text className="font-dm-sans text-md text-ink-primary flex-1">
 									{plugin}
 								</Text>
 								<View className="bg-teal/[0.12] rounded-sm px-2 py-[3px]">
@@ -305,7 +305,7 @@ export default function SettingsScreen() {
 									>
 										<Feather name="server" size={16} color="#1C1917" />
 										<View className="flex-1">
-											<Text className="font-dm-sans text-md text-primary">{name}</Text>
+											<Text className="font-dm-sans text-md text-ink-primary">{name}</Text>
 											<Text className="font-dm-sans text-sm text-secondary mt-0.5">
 												{server.command}
 											</Text>

@@ -72,7 +72,7 @@ function EventRow({ event }: { event: { id: string; sessionName: string; type: E
 			<Feather name={config.icon} size={16} color={config.color} />
 			<View className="flex-1">
 				<Text
-					className="font-dm-sans text-md font-semibold text-primary"
+					className="font-dm-sans text-md font-semibold text-ink-primary"
 					numberOfLines={1}
 				>
 					{event.sessionName}
@@ -107,7 +107,7 @@ export default function ActivityScreen() {
 		>
 			{/* Header */}
 			<View className="px-[21px] pt-4 pb-3">
-				<Text className="font-dm-sans text-4xl font-bold text-primary">
+				<Text className="font-dm-sans text-4xl font-bold text-ink-primary">
 					Activity
 				</Text>
 			</View>

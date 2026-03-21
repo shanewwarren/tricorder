@@ -26,10 +26,10 @@ export function UsageCard({ label, subtitle, percentage, resetIn, dollarAmount, 
 		<View className="bg-bg-card rounded-2xl p-4">
 			{/* Header */}
 			<View className="flex-row justify-between items-center mb-2">
-				<Text className="font-dm-sans text-xl font-semibold text-text-primary">
+				<Text className="font-dm-sans text-xl font-semibold text-ink-primary">
 					{label}
 				</Text>
-				<Text className="font-jetbrains text-sm text-text-secondary">
+				<Text className="font-jetbrains text-sm text-ink-secondary">
 					{subtitle}
 				</Text>
 			</View>
@@ -43,7 +43,7 @@ export function UsageCard({ label, subtitle, percentage, resetIn, dollarAmount, 
 					>
 						${dollarAmount.toFixed(2)}
 					</Text>
-					<Text className="font-dm-sans text-md text-text-secondary ml-1">
+					<Text className="font-dm-sans text-md text-ink-secondary ml-1">
 						of ${dollarLimit} limit
 					</Text>
 				</View>
@@ -71,12 +71,12 @@ export function UsageCard({ label, subtitle, percentage, resetIn, dollarAmount, 
 			{resetIn ? (
 				<View className="flex-row items-center gap-1">
 					<Feather name="clock" size={12} color="#78716C" />
-					<Text className="font-jetbrains text-sm text-text-secondary">
+					<Text className="font-jetbrains text-sm text-ink-secondary">
 						Resets in {resetIn}
 					</Text>
 				</View>
 			) : isDollar && dollarLimit ? (
-				<Text className="font-jetbrains text-sm text-text-secondary">
+				<Text className="font-jetbrains text-sm text-ink-secondary">
 					${(dollarLimit - (dollarAmount ?? 0)).toFixed(2)} remaining
 				</Text>
 			) : null}

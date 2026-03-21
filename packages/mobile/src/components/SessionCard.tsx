@@ -33,7 +33,7 @@ export function SessionCard({ session }: SessionCardProps) {
 			{/* Row 1: Title + Status */}
 			<View className="flex-row justify-between items-center w-full">
 				<Text
-					className="font-dm-sans text-lg font-semibold text-text-dark flex-1 mr-2"
+					className="font-dm-sans text-lg font-semibold text-ink-dark flex-1 mr-2"
 					numberOfLines={1}
 				>
 					{session.name}
@@ -43,17 +43,17 @@ export function SessionCard({ session }: SessionCardProps) {
 
 			{/* Row 2: Repo + Mode */}
 			<View className="flex-row items-center gap-[10px] w-full">
-				<Text className="font-jetbrains text-sm text-text-secondary">
+				<Text className="font-jetbrains text-sm text-ink-secondary">
 					{session.repoName}
 				</Text>
-				<Text className="font-dm-sans text-sm text-text-tertiary">
+				<Text className="font-dm-sans text-sm text-ink-tertiary">
 					·
 				</Text>
 				<ModeBadge mode={session.mode} />
 			</View>
 
 			{/* Row 3: Activity description */}
-			<Text className="font-dm-sans text-base text-text-secondary leading-[18.2px] w-full">
+			<Text className="font-dm-sans text-base text-ink-secondary leading-[18.2px] w-full">
 				{session.lastActivity}
 			</Text>
 		</Pressable>
