@@ -136,14 +136,10 @@ export default function SessionScreen() {
 		});
 	}, [stream?.messages, messages]);
 
-	// Auto-scroll only on first load or when new messages arrive
-	const prevMessageCount = useRef(0);
+	// Always scroll to bottom when messages change
 	useEffect(() => {
-		if (displayMessages.length > prevMessageCount.current && displayMessages.length > 0) {
-			setTimeout(() => {
-				listRef.current?.scrollToEnd({ animated: prevMessageCount.current > 0 });
-			}, 100);
-			prevMessageCount.current = displayMessages.length;
+		if (displayMessages.length > 0) {
+			setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 150);
 		}
 	}, [displayMessages.length]);
 
@@ -368,9 +364,9 @@ export default function SessionScreen() {
 				ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
 				showsVerticalScrollIndicator={false}
 				ListFooterComponent={
-					isActive ? (
-						<View className="flex-row items-center gap-2 p-4 mt-3">
-							<View className="bg-ink-dark rounded-xl px-4 py-3 flex-row items-center gap-2">
+					isActive || stream?.connected ? (
+						<View className="p-4 mt-1">
+							<View className="bg-ink-dark rounded-xl px-4 py-3 flex-row items-center gap-2 self-start">
 								<Feather name="star" size={14} color="#EA580C" />
 								<Text className="font-dm-sans text-sm text-white/70">Claude is thinking...</Text>
 							</View>
