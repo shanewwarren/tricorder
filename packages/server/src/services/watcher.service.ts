@@ -29,12 +29,13 @@ export class WatcherService {
 						if (!file.endsWith(".json")) continue;
 						const filePath = join(sessionDir, file);
 						const stat = statSync(filePath);
-						const sessionId = file.replace(".json", "");
+						const fileId = file.replace(".json", "");
+						const sessionId = `${entry.name}/${fileId}`;
 						sessions.push({
 							id: sessionId,
 							name: entry.name,
 							directory: sessionDir,
-							active: this.isSessionActive(sessionId),
+							active: this.isSessionActive(fileId),
 							lastModified: stat.mtime.toISOString(),
 						});
 					}

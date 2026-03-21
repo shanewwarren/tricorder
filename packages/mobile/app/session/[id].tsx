@@ -105,11 +105,30 @@ export default function SessionScreen() {
 		{ enabled: !!session && session.status !== "active" && !isLocalSession }
 	);
 
-	// Use stream messages if connected, fall back to query messages
+	// Merge stream and query messages, deduplicate by index
 	const displayMessages = useMemo(() => {
-		if (stream?.connected && stream.messages.length > 0) return stream.messages;
-		return messages;
-	}, [stream?.connected, stream?.messages, messages]);
+		const seen = new Set<number>();
+		const merged: typeof messages = [];
+		// Stream messages take priority (most recent)
+		if (stream?.messages) {
+			for (const msg of stream.messages) {
+				const idx = (msg as any).index ?? merged.length;
+				if (!seen.has(idx)) {
+					seen.add(idx);
+					merged.push(msg);
+				}
+			}
+		}
+		// Fill in any query messages not already seen
+		for (const msg of messages) {
+			const idx = (msg as any).index ?? merged.length;
+			if (!seen.has(idx)) {
+				seen.add(idx);
+				merged.push(msg);
+			}
+		}
+		return merged;
+	}, [stream?.messages, messages]);
 
 	// Auto-scroll to bottom when messages change
 	useEffect(() => {

@@ -20,7 +20,8 @@ const queryClient = new QueryClient({
   },
 });
 
-const DEFAULT_URL = "http://localhost:3141";
+const serverPort = process.env.EXPO_PUBLIC_SERVER_PORT || "3141";
+const DEFAULT_URL = `http://localhost:${serverPort}`;
 
 interface TrpcContextValue {
   reconnect: (url: string) => void;

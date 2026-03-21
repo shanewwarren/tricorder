@@ -7,7 +7,8 @@ export const trpc = createTRPCReact<AppRouter>();
 
 export async function getServerUrl(): Promise<string> {
 	const stored = await AsyncStorage.getItem("tricorder-server-url");
-	return stored || "http://localhost:3141";
+	const port = process.env.EXPO_PUBLIC_SERVER_PORT || "3141";
+	return stored || `http://localhost:${port}`;
 }
 
 export function createTrpcClient(serverUrl: string) {
