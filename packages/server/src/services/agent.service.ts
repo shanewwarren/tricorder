@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { query, type Options } from "@anthropic-ai/claude-agent-sdk";
 import type { SandboxService } from "./sandbox.service";
 import type { SessionMode, ServerConfig } from "@tricorder/shared";
@@ -8,6 +9,7 @@ export interface AgentStreamCallbacks {
 	onSessionId: (sessionId: string) => void;
 	onComplete: () => void;
 	onError: (error: Error) => void;
+	onApprovalRequest?: (request: { toolUseId: string; toolName: string; title: string; input: Record<string, unknown> }) => Promise<boolean>;
 }
 
 export class AgentService {
@@ -53,6 +55,36 @@ export class AgentService {
 			...(resumeSessionId ? { resume: resumeSessionId } : {}),
 			...(plugins ? { plugins } : {}),
 			...(mcpServers ? { mcpServers } : {}),
+			...(mode === "interactive" && callbacks.onApprovalRequest
+				? {
+						canUseTool: async (toolName: string, toolInput: Record<string, unknown>) => {
+							const toolUseId = randomUUID();
+							const title = `${toolName}`;
+
+							callbacks.onMessage({
+								type: "approval_request",
+								content: {
+									toolUseId,
+									toolName,
+									title,
+									description: toolName,
+									input: toolInput,
+								},
+							});
+
+							const approved = await Promise.race([
+								callbacks.onApprovalRequest!({ toolUseId, toolName, title, input: toolInput }),
+								new Promise<boolean>((resolve) =>
+									setTimeout(() => resolve(false), 5 * 60 * 1000),
+								),
+							]);
+
+							return approved
+								? { behavior: "allow" as const }
+								: { behavior: "deny" as const, message: "Denied from Tricorder" };
+						},
+					}
+				: {}),
 			hooks: {
 				PreToolUse: [
 					{

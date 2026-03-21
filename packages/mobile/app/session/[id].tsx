@@ -2,6 +2,7 @@ import { ApprovalPrompt } from "@/src/components/ApprovalPrompt";
 import { HandoffBanner } from "@/src/components/HandoffBanner";
 import { MessageBubble } from "@/src/components/MessageBubble";
 import { ModeBadge } from "@/src/components/ModeBadge";
+import { PlanCard } from "@/src/components/PlanCard";
 import { ResultSummary } from "@/src/components/ResultSummary";
 import { StatusPill } from "@/src/components/StatusPill";
 import { ToolCard } from "@/src/components/ToolCard";
@@ -105,6 +106,8 @@ export default function SessionScreen() {
 	const sendMessage = trpc.sessions.message.useMutation({
 		onSuccess: () => utils.sessions.detail.invalidate({ id: id! }),
 	});
+	const approveMutation = trpc.sessions.approve.useMutation();
+	const denyMutation = trpc.sessions.deny.useMutation();
 
 	// Handoff query - only when session is not active
 	const { data: handoff } = trpc.sessions.handoff.useQuery(
@@ -303,6 +306,16 @@ export default function SessionScreen() {
 							break;
 						case "tool_use": {
 							const content = msg.content as any;
+							// Detect plan-related tool calls
+							if (content.tool === "ExitPlanMode" && content.input?.plan) {
+								bubble = <PlanCard content={content.input.plan} />;
+								break;
+							}
+							if (content.tool === "Write" && content.input?.file_path?.includes("/.claude/plans/")) {
+								const planTitle = content.input.file_path.split("/").pop() ?? "Plan";
+								bubble = <PlanCard content={content.input.content} title={planTitle} />;
+								break;
+							}
 							const toolResult = displayMessages.find(
 								(m) => m.type === "tool_result" && (m.content as any)?.tool_use_id === content.id,
 							);
@@ -334,15 +347,17 @@ export default function SessionScreen() {
 						case "result":
 							bubble = <ResultSummary content={text} />;
 							break;
-						case "approval_request":
+						case "approval_request": {
+							const content = msg.content as any;
 							bubble = (
 								<ApprovalPrompt
-									action={(msg.content as any)?.description ?? "Pending approval"}
-									onApprove={() => {}}
-									onDeny={() => {}}
+									action={content.description ?? content.title ?? "Pending approval"}
+									onApprove={() => approveMutation.mutate({ id: session.id, toolUseId: content.toolUseId })}
+									onDeny={() => denyMutation.mutate({ id: session.id, toolUseId: content.toolUseId })}
 								/>
 							);
 							break;
+						}
 						default:
 							bubble = <View />;
 					}

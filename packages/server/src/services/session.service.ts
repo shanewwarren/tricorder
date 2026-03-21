@@ -10,6 +10,7 @@ interface ActiveSession {
 	abortController: AbortController;
 	messageBuffer: unknown[];
 	subscribers: Set<(msg: unknown) => void>;
+	pendingApprovals: Map<string, { resolve: (approved: boolean) => void }>;
 }
 
 export class SessionService {
@@ -57,6 +58,7 @@ export class SessionService {
 			abortController,
 			messageBuffer: [],
 			subscribers: new Set(),
+			pendingApprovals: new Map(),
 		};
 		this.activeSessions.set(sessionId, activeSession);
 
@@ -85,6 +87,11 @@ export class SessionService {
 				},
 				onError: (_error: Error) => {
 					this.activeSessions.delete(sessionId);
+				},
+				onApprovalRequest: async (request) => {
+					return new Promise<boolean>((resolve) => {
+						activeSession.pendingApprovals.set(request.toolUseId, { resolve });
+					});
 				},
 			},
 			abortSignal: abortController.signal,
@@ -203,6 +210,7 @@ export class SessionService {
 			abortController,
 			messageBuffer: [],
 			subscribers: new Set(),
+			pendingApprovals: new Map(),
 		};
 		this.activeSessions.set(sessionId, activeSession);
 
@@ -227,9 +235,32 @@ export class SessionService {
 				onError: (_error: Error) => {
 					this.activeSessions.delete(sessionId);
 				},
+				onApprovalRequest: async (request) => {
+					return new Promise<boolean>((resolve) => {
+						activeSession.pendingApprovals.set(request.toolUseId, { resolve });
+					});
+				},
 			},
 			abortSignal: abortController.signal,
 		});
+	}
+
+	approveToolUse(sessionId: string, toolUseId: string) {
+		const active = this.activeSessions.get(sessionId);
+		const pending = active?.pendingApprovals.get(toolUseId);
+		if (pending) {
+			pending.resolve(true);
+			active!.pendingApprovals.delete(toolUseId);
+		}
+	}
+
+	denyToolUse(sessionId: string, toolUseId: string) {
+		const active = this.activeSessions.get(sessionId);
+		const pending = active?.pendingApprovals.get(toolUseId);
+		if (pending) {
+			pending.resolve(false);
+			active!.pendingApprovals.delete(toolUseId);
+		}
 	}
 
 	async getHandoff(sessionId: string) {

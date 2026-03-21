@@ -36,6 +36,20 @@ export const sessionsRouter = router({
 		return sessionService.cancel(input.id);
 	}),
 
+	approve: publicProcedure
+		.input(z.object({ id: z.string(), toolUseId: z.string() }))
+		.mutation(({ input, ctx }) => {
+			const sessionService = ctx.container.resolve("sessionService");
+			sessionService.approveToolUse(input.id, input.toolUseId);
+		}),
+
+	deny: publicProcedure
+		.input(z.object({ id: z.string(), toolUseId: z.string() }))
+		.mutation(({ input, ctx }) => {
+			const sessionService = ctx.container.resolve("sessionService");
+			sessionService.denyToolUse(input.id, input.toolUseId);
+		}),
+
 	handoff: publicProcedure.input(z.object({ id: z.string() })).query(({ input, ctx }) => {
 		const sessionService = ctx.container.resolve("sessionService");
 		return sessionService.getHandoff(input.id);
