@@ -79,26 +79,39 @@ export class ClaudeSessionsService {
 		let index = fromIdx ?? 0;
 
 		for (const msg of rawMessages) {
+			const msgContent =
+				msg.message && typeof msg.message === "object" && "content" in msg.message
+					? (msg.message as any).content
+					: "";
+
 			if (msg.type === "user") {
-				let text = "";
-				if (msg.message && typeof msg.message === "object" && "content" in msg.message) {
-					const msgContent = (msg.message as any).content;
-					if (typeof msgContent === "string") {
-						text = msgContent;
-					} else if (Array.isArray(msgContent)) {
-						text = msgContent
-							.filter((b: any) => b.type === "text")
-							.map((b: any) => b.text)
-							.join("\n");
+				if (typeof msgContent === "string") {
+					if (msgContent) entries.push({ index: index++, type: "user", content: msgContent, timestamp: "" });
+				} else if (Array.isArray(msgContent)) {
+					// Extract text blocks as user message
+					const text = msgContent
+						.filter((b: any) => b.type === "text")
+						.map((b: any) => b.text)
+						.join("\n");
+					if (text) entries.push({ index: index++, type: "user", content: text, timestamp: "" });
+
+					// Extract tool_result blocks (API puts them in user turns)
+					for (const block of msgContent) {
+						if (block.type === "tool_result") {
+							entries.push({
+								index: index++,
+								type: "tool_result",
+								content: {
+									tool_use_id: block.tool_use_id,
+									content: block.content,
+									is_error: block.is_error,
+								},
+								timestamp: "",
+							});
+						}
 					}
 				}
-				entries.push({ index: index++, type: "user", content: text, timestamp: "" });
 			} else if (msg.type === "assistant") {
-				const msgContent =
-					msg.message && typeof msg.message === "object" && "content" in msg.message
-						? (msg.message as any).content
-						: "";
-
 				if (typeof msgContent === "string") {
 					entries.push({ index: index++, type: "assistant", content: msgContent, timestamp: "" });
 				} else if (Array.isArray(msgContent)) {
