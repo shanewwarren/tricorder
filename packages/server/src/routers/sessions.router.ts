@@ -14,10 +14,10 @@ export const sessionsRouter = router({
 		return sessionService.list();
 	}),
 
-	detail: publicProcedure.input(z.object({ id: z.string() })).query(({ input, ctx }) => {
+	detail: publicProcedure.input(z.object({ id: z.string() })).query(async ({ input, ctx }) => {
 		const sessionService = ctx.container.resolve("sessionService");
-		const session = sessionService.getById(input.id);
-		const messages = sessionService.getMessages(input.id);
+		const session = await sessionService.getById(input.id);
+		const messages = await sessionService.getMessages(input.id);
 		return { session, messages };
 	}),
 
@@ -41,17 +41,33 @@ export const sessionsRouter = router({
 		return sessionService.getHandoff(input.id);
 	}),
 
+	rename: publicProcedure.input(z.object({ id: z.string(), title: z.string() })).mutation(({ input, ctx }) => {
+		const sessionService = ctx.container.resolve("sessionService");
+		return sessionService.renameSession(input.id, input.title);
+	}),
+
+	tag: publicProcedure.input(z.object({ id: z.string(), tag: z.string().nullable() })).mutation(({ input, ctx }) => {
+		const sessionService = ctx.container.resolve("sessionService");
+		return sessionService.tagSession(input.id, input.tag);
+	}),
+
+	fork: publicProcedure.input(z.object({ id: z.string(), upToMessageId: z.string().optional(), title: z.string().optional() })).mutation(({ input, ctx }) => {
+		const sessionService = ctx.container.resolve("sessionService");
+		return sessionService.forkSession(input.id, { upToMessageId: input.upToMessageId, title: input.title });
+	}),
+
 	stream: publicProcedure
 		.input(z.object({ id: z.string(), lastSeenIndex: z.number().optional() }))
 		.subscription(({ input, ctx }) => {
 			return observable((emit) => {
 				const sessionService = ctx.container.resolve("sessionService");
 
-				// Replay missed messages
-				const missed = sessionService.getMessages(input.id, input.lastSeenIndex);
-				for (const msg of missed) {
-					emit.next(msg);
-				}
+				// Replay missed messages (async, but observable expects sync setup)
+				sessionService.getMessages(input.id, input.lastSeenIndex).then((missed: any[]) => {
+					for (const msg of missed) {
+						emit.next(msg);
+					}
+				});
 
 				// Subscribe to new messages
 				const unsubscribe = sessionService.subscribe(input.id, (msg: unknown) => {

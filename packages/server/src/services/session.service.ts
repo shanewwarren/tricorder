@@ -93,8 +93,8 @@ export class SessionService {
 		return sessionId;
 	}
 
-	list() {
-		const claudeSessions = this.claudeSessionsService.listSessions();
+	async list() {
+		const claudeSessions = await this.claudeSessionsService.listSessions();
 		const manifest = this.manifestService.listTricorderSessions();
 
 		return claudeSessions.map((s) => ({
@@ -113,8 +113,8 @@ export class SessionService {
 		}));
 	}
 
-	getById(id: string) {
-		const meta = this.claudeSessionsService.getSessionMeta(id);
+	async getById(id: string) {
+		const meta = await this.claudeSessionsService.getSessionMeta(id);
 		if (!meta) throw new Error(`Session "${id}" not found`);
 		const manifest = this.manifestService.getSession(id);
 		return {
@@ -134,7 +134,7 @@ export class SessionService {
 		};
 	}
 
-	getMessages(sessionId: string, fromIdx?: number) {
+	async getMessages(sessionId: string, fromIdx?: number) {
 		// For active Tricorder sessions, check in-memory buffer first
 		const active = this.activeSessions.get(sessionId);
 		if (active && active.messageBuffer.length > 0) {
@@ -151,7 +151,7 @@ export class SessionService {
 			return msgs;
 		}
 		// Fall back to JSONL history
-		return this.claudeSessionsService.getMessages(sessionId, fromIdx);
+		return await this.claudeSessionsService.getMessages(sessionId, fromIdx);
 	}
 
 	subscribe(sessionId: string, callback: (msg: unknown) => void): () => void {
@@ -182,7 +182,7 @@ export class SessionService {
 	}
 
 	async sendMessage(sessionId: string, message: string) {
-		const session = this.getById(sessionId);
+		const session = await this.getById(sessionId);
 		if (!session.agentSessionId) {
 			throw new Error("Session has no agent session ID — cannot resume");
 		}
@@ -224,8 +224,8 @@ export class SessionService {
 		});
 	}
 
-	getHandoff(sessionId: string) {
-		const session = this.getById(sessionId);
+	async getHandoff(sessionId: string) {
+		const session = await this.getById(sessionId);
 		const allowedStatuses = ["paused", "completed", "error", "cancelled"];
 		if (!allowedStatuses.includes(session.status)) {
 			throw new Error(`Cannot hand off an active session. Current status: ${session.status}`);
@@ -243,8 +243,8 @@ export class SessionService {
 		};
 	}
 
-	getActivityFeed(limit = 50) {
-		const sessions = this.claudeSessionsService.listSessions();
+	async getActivityFeed(limit = 50) {
+		const sessions = await this.claudeSessionsService.listSessions();
 		const events: Array<{
 			id: string;
 			sessionId: string;
@@ -278,5 +278,17 @@ export class SessionService {
 		return events
 			.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 			.slice(0, limit);
+	}
+
+	async renameSession(sessionId: string, title: string) {
+		await this.claudeSessionsService.rename(sessionId, title);
+	}
+
+	async tagSession(sessionId: string, tag: string | null) {
+		await this.claudeSessionsService.tag(sessionId, tag);
+	}
+
+	async forkSession(sessionId: string, options?: { upToMessageId?: string; title?: string }) {
+		return this.claudeSessionsService.fork(sessionId, options);
 	}
 }
