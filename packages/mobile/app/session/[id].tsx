@@ -2,6 +2,7 @@ import { ApprovalPrompt } from "@/src/components/ApprovalPrompt";
 import { HandoffBanner } from "@/src/components/HandoffBanner";
 import { MessageBubble } from "@/src/components/MessageBubble";
 import { ModeBadge } from "@/src/components/ModeBadge";
+import { CommandPicker } from "@/src/components/CommandPicker";
 import { PlanCard } from "@/src/components/PlanCard";
 import { ResultSummary } from "@/src/components/ResultSummary";
 import { StatusPill } from "@/src/components/StatusPill";
@@ -45,6 +46,7 @@ export default function SessionScreen() {
 	const [now, setNow] = useState(Date.now());
 	const [showPrompt, setShowPrompt] = useState(false);
 	const [showHandoffSheet, setShowHandoffSheet] = useState(false);
+	const [showCommandPicker, setShowCommandPicker] = useState(false);
 
 	const initStream = useStreamStore((s) => s.initStream);
 	const addMessage = useStreamStore((s) => s.addMessage);
@@ -404,6 +406,12 @@ export default function SessionScreen() {
 					>
 						<Feather name="terminal" size={18} color="#78716C" />
 					</Pressable>
+					<Pressable
+						onPress={() => setShowCommandPicker(true)}
+						className="w-10 h-10 rounded-full items-center justify-center bg-surface-card"
+					>
+						<Text className="font-jetbrains text-lg font-bold text-primary">/</Text>
+					</Pressable>
 					<TextInput
 						value={inputText}
 						onChangeText={setInputText}
@@ -446,6 +454,16 @@ export default function SessionScreen() {
 					<HandoffBanner command={handoff?.resumeCommand ?? `claude --resume ${session.id}`} />
 				</View>
 			</Modal>
+
+			{/* ── Command Picker ──────────────────────────────────────── */}
+			<CommandPicker
+				visible={showCommandPicker}
+				onClose={() => setShowCommandPicker(false)}
+				onSelect={(command) => {
+					setInputText(command + " ");
+					setShowCommandPicker(false);
+				}}
+			/>
 		</KeyboardAvoidingView>
 	);
 }
