@@ -1,21 +1,14 @@
-import { join } from "path";
 import cors from "cors";
 import { createHTTPServer } from "@trpc/server/adapters/standalone";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { WebSocketServer } from "ws";
-import { migrate } from "drizzle-orm/bun-sqlite/migrator";
-import { loadConfig, getDbPath } from "./config";
-import { createDb } from "./db";
+import { loadConfig } from "./config";
 import { createAppContainer } from "./container";
 import { appRouter } from "./routers";
 
 const config = loadConfig();
-const db = createDb(getDbPath());
 
-// Run migrations on startup
-migrate(db, { migrationsFolder: join(import.meta.dir, "../drizzle") });
-
-const container = createAppContainer(config, db);
+const container = createAppContainer(config);
 
 const httpServer = createHTTPServer({
 	router: appRouter,
@@ -42,7 +35,7 @@ applyWSSHandler({ wss, router: appRouter, createContext: () => ({ container }) }
 const { host, port } = config;
 httpServer.listen(port, host);
 console.log(`Tricorder server listening on ${host}:${port}`);
-console.log(`Scanning repos in: ${config.scanDirectory}`);
+console.log(`Scanning repos from Claude project directories`);
 
 const cleanupService = container.resolve("cleanupService");
 cleanupService.start();

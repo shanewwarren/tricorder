@@ -1,46 +1,38 @@
-import { existsSync, rmSync } from "fs";
-import { SessionsRepository } from "../repositories/sessions.repo";
+import { ManifestService } from "./manifest.service";
+import { WorktreeService } from "./worktree.service";
 
 const CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
-const WORKTREE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+const MAX_AGE = 24 * 60 * 60 * 1000; // 24 hours
 
 export class CleanupService {
 	private interval: ReturnType<typeof setInterval> | null = null;
 
-	constructor(private sessionsRepo: SessionsRepository) {}
+	constructor(
+		private manifestService: ManifestService,
+		private worktreeService: WorktreeService,
+	) {}
 
 	start() {
-		this.runCleanup().catch(console.error);
-		this.interval = setInterval(() => this.runCleanup().catch(console.error), CLEANUP_INTERVAL);
+		this.interval = setInterval(() => this.runCleanup(), CLEANUP_INTERVAL);
 	}
 
 	stop() {
-		if (this.interval) {
-			clearInterval(this.interval);
-			this.interval = null;
-		}
+		if (this.interval) clearInterval(this.interval);
 	}
 
-	async runCleanup() {
-		const sessions = this.sessionsRepo.findAll();
+	private async runCleanup() {
+		const sessions = this.manifestService.listTricorderSessions();
 		const now = Date.now();
 
-		for (const session of sessions) {
-			if (!["completed", "cancelled", "error"].includes(session.status)) continue;
-			if (!session.worktreePath) continue;
-
-			const updatedAt = new Date(session.updatedAt).getTime();
-			if (now - updatedAt < WORKTREE_TTL) continue;
+		for (const [id, entry] of Object.entries(sessions)) {
+			if (!entry.worktreePath) continue;
+			const age = now - new Date(entry.launchedAt).getTime();
+			if (age < MAX_AGE) continue;
 
 			try {
-				if (existsSync(session.worktreePath)) {
-					rmSync(session.worktreePath, { recursive: true, force: true });
-				}
-				this.sessionsRepo.clearWorktreePath(session.id);
-				console.log(`Cleaned up worktree for session ${session.id}`);
-			} catch (err) {
-				console.error(`Cleanup failed for session ${session.id}:`, err);
-			}
+				await this.worktreeService.removeWorktree(entry.repoPath, entry.worktreePath);
+				this.manifestService.removeWorktree(id);
+			} catch {}
 		}
 	}
 }

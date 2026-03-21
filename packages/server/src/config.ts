@@ -5,8 +5,6 @@ import { serverConfig, type ServerConfig } from "@tricorder/shared";
 
 const BASE_DIR = join(homedir(), ".tricorder");
 const CONFIG_PATH = join(BASE_DIR, "config.json");
-const DB_PATH = join(BASE_DIR, "tricorder.db");
-
 export function loadConfig(): ServerConfig {
 	if (!existsSync(BASE_DIR)) {
 		mkdirSync(BASE_DIR, { recursive: true });
@@ -26,9 +24,6 @@ export function loadConfig(): ServerConfig {
 	return config;
 }
 
-export function getDbPath(): string {
-	return DB_PATH;
-}
 export function getTricorderDir(): string {
 	return BASE_DIR;
 }

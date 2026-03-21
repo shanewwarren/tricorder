@@ -23,20 +23,12 @@ function formatElapsed(seconds: number): string {
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function SessionScreen() {
-	const { id, local } = useLocalSearchParams<{ id: string; local?: string }>();
-	const isLocalSession = local === "true";
+	const { id } = useLocalSearchParams<{ id: string }>();
 	const router = useRouter();
 	const insets = useSafeAreaInsets();
 	const scrollRef = useRef<ScrollView>(null);
 	const [inputText, setInputText] = useState("");
 	const [now, setNow] = useState(Date.now());
-
-	// Local session queries
-	const { data: localSession } = trpc.localSessions.detail.useQuery(
-		{ id: id! },
-		{ enabled: !!id && isLocalSession }
-	);
-	const takeoverMutation = trpc.localSessions.takeover.useMutation();
 
 	const initStream = useStreamStore((s) => s.initStream);
 	const addMessage = useStreamStore((s) => s.addMessage);
@@ -46,11 +38,11 @@ export default function SessionScreen() {
 
 	const { data: sessionData } = trpc.sessions.detail.useQuery(
 		{ id: id! },
-		{ enabled: !!id && !isLocalSession, refetchInterval: stream?.connected ? false : 5000 }
+		{ enabled: !!id, refetchInterval: stream?.connected ? false : 5000 }
 	);
 	const utils = trpc.useUtils();
 
-	const session = isLocalSession ? null : sessionData?.session;
+	const session = sessionData?.session;
 	const messages = sessionData?.messages ?? [];
 
 	const isSessionActive = session?.status === "active";
@@ -61,13 +53,13 @@ export default function SessionScreen() {
 		return () => clearInterval(interval);
 	}, [isSessionActive]);
 
-	// Initialize stream on mount (server sessions only)
+	// Initialize stream on mount
 	useEffect(() => {
-		if (id && !isLocalSession) initStream(id);
+		if (id) initStream(id);
 		return () => {
-			if (id && !isLocalSession) clearStream(id);
+			if (id) clearStream(id);
 		};
-	}, [id, isLocalSession]);
+	}, [id]);
 
 	// Capture initial lastSeenIndex to avoid reconnect loops when store updates
 	const initialLastSeenIndex = useRef(stream?.lastSeenIndex ?? 0);
@@ -76,7 +68,7 @@ export default function SessionScreen() {
 	trpc.sessions.stream.useSubscription(
 		{ id: id!, lastSeenIndex: initialLastSeenIndex.current },
 		{
-			enabled: !!id && !!stream && !isLocalSession,
+			enabled: !!id && !!stream,
 			onData: (message) => {
 				addMessage(id!, message);
 			},
@@ -102,7 +94,7 @@ export default function SessionScreen() {
 	// Handoff query - only when session is not active
 	const { data: handoff } = trpc.sessions.handoff.useQuery(
 		{ id: id! },
-		{ enabled: !!session && session.status !== "active" && !isLocalSession }
+		{ enabled: !!session && session.status !== "active" }
 	);
 
 	// Merge stream and query messages, deduplicate by index
@@ -135,75 +127,6 @@ export default function SessionScreen() {
 		setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
 	}, [displayMessages.length]);
 
-	// ─── Local Session Detail View ───────────────────────────────────────────
-	if (isLocalSession) {
-		if (!localSession) {
-			return (
-				<View style={{ flex: 1, backgroundColor: "#FAFAF9", justifyContent: "center", alignItems: "center" }}>
-					<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#A8A29E" }}>Loading session...</Text>
-				</View>
-			);
-		}
-
-		return (
-			<View style={{ flex: 1, backgroundColor: "#FAFAF9", paddingTop: insets.top }}>
-				{/* Header */}
-				<View style={{ borderBottomWidth: 1, borderBottomColor: "rgba(0,0,0,0.06)" }}>
-					<View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingTop: 8, paddingBottom: 6 }}>
-						<Pressable onPress={() => router.back()} hitSlop={12} style={{ marginRight: 8 }}>
-							<Feather name="chevron-left" size={24} color="#292524" />
-						</Pressable>
-						<Text style={{ fontFamily: "DM Sans", fontSize: 16, fontWeight: "700", color: "#292524", flex: 1 }} numberOfLines={1}>
-							{localSession.name}
-						</Text>
-						<StatusPill status="local" />
-					</View>
-					<View style={{ paddingHorizontal: 48, gap: 4, paddingBottom: 10 }}>
-						<Text style={{ fontFamily: "JetBrains Mono", fontSize: 12, color: "#78716C" }}>
-							{localSession.directory}
-						</Text>
-					</View>
-				</View>
-
-				{/* Body */}
-				<View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32, gap: 16 }}>
-					<View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: localSession.active ? "rgba(22, 163, 74, 0.12)" : "#F1F1F1", alignItems: "center", justifyContent: "center" }}>
-						<Feather name={localSession.active ? "terminal" : "pause-circle"} size={24} color={localSession.active ? "#16A34A" : "#A8A29E"} />
-					</View>
-					<Text style={{ fontFamily: "DM Sans", fontSize: 15, fontWeight: "600", color: "#292524" }}>
-						{localSession.active ? "Active in terminal" : "Session idle"}
-					</Text>
-					<Text style={{ fontFamily: "DM Sans", fontSize: 13, color: "#78716C", textAlign: "center" }}>
-						{localSession.active
-							? "This session is currently running in a terminal. Stop it there first to take over."
-							: "This session is idle. You can take it over to continue the conversation."}
-					</Text>
-					{!localSession.active && (
-						<Pressable
-							onPress={() => takeoverMutation.mutate({ id: localSession.id })}
-							style={({ pressed }) => ({
-								marginTop: 8,
-								backgroundColor: takeoverMutation.isPending ? "#A8A29E" : pressed ? "#D35407" : "#EA580C",
-								borderRadius: 12,
-								paddingVertical: 12,
-								paddingHorizontal: 24,
-								flexDirection: "row",
-								alignItems: "center",
-								gap: 8,
-							})}
-						>
-							<Feather name="download" size={16} color="#FFFFFF" />
-							<Text style={{ fontFamily: "DM Sans", fontSize: 14, fontWeight: "700", color: "#FFFFFF" }}>
-								Take Over Session
-							</Text>
-						</Pressable>
-					)}
-				</View>
-			</View>
-		);
-	}
-
-	// ─── Server Session Detail View ──────────────────────────────────────────
 	if (!session) {
 		return (
 			<View style={{ flex: 1, backgroundColor: "#FAFAF9", justifyContent: "center", alignItems: "center" }}>

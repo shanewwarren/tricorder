@@ -4,7 +4,7 @@ import { Pressable, Text, View } from "react-native";
 import { ModeBadge } from "./ModeBadge";
 import { StatusPill } from "./StatusPill";
 
-type SessionStatus = "running" | "waiting" | "paused" | "completed" | "local" | "error";
+type SessionStatus = "running" | "waiting" | "paused" | "completed" | "error";
 
 interface Session {
 	id: string;
@@ -13,7 +13,6 @@ interface Session {
 	mode: "autonomous" | "interactive";
 	status: SessionStatus;
 	lastActivity: string;
-	isLocal?: boolean;
 }
 
 interface SessionCardProps {
@@ -22,18 +21,17 @@ interface SessionCardProps {
 
 export function SessionCard({ session }: SessionCardProps) {
 	const router = useRouter();
-	const isLocal = session.status === "local";
 
 	return (
 		<Pressable
-			onPress={() => router.push(`/session/${session.id}?local=${session.isLocal ?? false}` as any)}
+			onPress={() => router.push(`/session/${session.id}` as any)}
 			style={({ pressed }) => ({
 				backgroundColor: "#F1F1F1",
 				borderRadius: 16,
 				padding: 16,
 				paddingHorizontal: 18,
 				gap: 10,
-				opacity: isLocal ? 0.6 : pressed ? 0.8 : 1,
+				opacity: pressed ? 0.8 : 1,
 			})}
 		>
 			{/* Row 1: Title + Status */}
@@ -88,21 +86,7 @@ export function SessionCard({ session }: SessionCardProps) {
 				>
 					·
 				</Text>
-				{isLocal ? (
-					<Text
-						style={{
-							fontFamily: "JetBrains Mono",
-							fontSize: 10,
-							fontWeight: "700",
-							letterSpacing: 0.5,
-							color: "#78716C",
-						}}
-					>
-						local terminal
-					</Text>
-				) : (
-					<ModeBadge mode={session.mode} />
-				)}
+				<ModeBadge mode={session.mode} />
 			</View>
 
 			{/* Row 3: Activity description */}

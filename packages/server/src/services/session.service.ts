@@ -1,9 +1,8 @@
 import { randomUUID } from "crypto";
 import type { CreateSessionInput, ServerConfig } from "@tricorder/shared";
-import type { SessionsRepository } from "../repositories/sessions.repo";
-import type { MessagesRepository } from "../repositories/messages.repo";
-import type { ActivityRepository } from "../repositories/activity.repo";
-import type { ReposRepository } from "../repositories/repos.repo";
+import type { ClaudeSessionsService } from "./claude-sessions.service";
+import type { ManifestService } from "./manifest.service";
+import type { ReposService } from "./repos.service";
 import type { AgentService } from "./agent.service";
 import type { WorktreeService } from "./worktree.service";
 
@@ -17,10 +16,9 @@ export class SessionService {
 	private activeSessions = new Map<string, ActiveSession>();
 
 	constructor(
-		private sessionsRepo: SessionsRepository,
-		private messagesRepo: MessagesRepository,
-		private activityRepo: ActivityRepository,
-		private reposRepo: ReposRepository,
+		private claudeSessionsService: ClaudeSessionsService,
+		private manifestService: ManifestService,
+		private reposService: ReposService,
 		private agentService: AgentService,
 		private worktreeService: WorktreeService,
 		private config: ServerConfig,
@@ -43,7 +41,7 @@ export class SessionService {
 			);
 		}
 
-		const repo = await this.reposRepo.findByName(input.repoName);
+		const repo = await this.reposService.findByName(input.repoName);
 		if (!repo) {
 			throw new Error(`Repository "${input.repoName}" not found`);
 		}
@@ -53,23 +51,6 @@ export class SessionService {
 		const branch = input.branch ?? "main";
 
 		const worktreePath = await this.worktreeService.createWorktree(repo.path, branch, sessionId);
-
-		this.sessionsRepo.insert({
-			id: sessionId,
-			name: sessionName,
-			repoName: input.repoName,
-			branch,
-			mode: input.mode,
-			worktreePath,
-		});
-
-		this.activityRepo.insert({
-			id: randomUUID(),
-			sessionId,
-			sessionName,
-			type: "created",
-			description: `Session created for ${input.repoName} on branch ${branch}`,
-		});
 
 		const abortController = new AbortController();
 		const activeSession: ActiveSession = {
@@ -86,41 +67,23 @@ export class SessionService {
 			mode: input.mode,
 			callbacks: {
 				onSessionId: (agentSessionId: string) => {
-					this.sessionsRepo.updateAgentSession(sessionId, agentSessionId);
+					this.manifestService.addSession(agentSessionId, {
+						worktreePath,
+						mode: input.mode,
+						repoPath: repo.path,
+						launchedAt: new Date().toISOString(),
+					});
 				},
 				onMessage: (message: unknown) => {
 					activeSession.messageBuffer.push(message);
-					const idx = activeSession.messageBuffer.length - 1;
-					const type =
-						typeof message === "object" && message !== null && "type" in message
-							? String((message as Record<string, unknown>).type)
-							: "unknown";
-					this.messagesRepo.insert(sessionId, idx, type, message);
-					this.sessionsRepo.updateActivity(sessionId, type);
 					for (const subscriber of activeSession.subscribers) {
 						subscriber(message);
 					}
 				},
 				onComplete: () => {
-					this.sessionsRepo.updateStatus(sessionId, "completed");
-					this.activityRepo.insert({
-						id: randomUUID(),
-						sessionId,
-						sessionName,
-						type: "completed",
-						description: "Session completed successfully",
-					});
 					this.activeSessions.delete(sessionId);
 				},
-				onError: (error: Error) => {
-					this.sessionsRepo.updateError(sessionId, error.message);
-					this.activityRepo.insert({
-						id: randomUUID(),
-						sessionId,
-						sessionName,
-						type: "error",
-						description: `Session error: ${error.message}`,
-					});
+				onError: (_error: Error) => {
 					this.activeSessions.delete(sessionId);
 				},
 			},
@@ -131,22 +94,63 @@ export class SessionService {
 	}
 
 	list() {
-		return this.sessionsRepo.findAll();
+		const claudeSessions = this.claudeSessionsService.listSessions();
+		const manifest = this.manifestService.listTricorderSessions();
+
+		return claudeSessions.map((s) => ({
+			id: s.sessionId,
+			name: s.name,
+			repoName: s.repoName,
+			branch: s.gitBranch,
+			mode: manifest[s.sessionId]?.mode ?? "interactive",
+			status: this.activeSessions.has(s.sessionId) || s.active ? "active" : "completed",
+			lastActivity: null,
+			lastError: null,
+			worktreePath: manifest[s.sessionId]?.worktreePath ?? null,
+			agentSessionId: s.sessionId,
+			createdAt: s.firstTimestamp,
+			updatedAt: s.lastTimestamp,
+		}));
 	}
 
 	getById(id: string) {
-		const session = this.sessionsRepo.findById(id);
-		if (!session) {
-			throw new Error(`Session "${id}" not found`);
-		}
-		return session;
+		const meta = this.claudeSessionsService.getSessionMeta(id);
+		if (!meta) throw new Error(`Session "${id}" not found`);
+		const manifest = this.manifestService.getSession(id);
+		return {
+			id: meta.sessionId,
+			name: meta.name,
+			repoName: meta.repoName,
+			branch: meta.gitBranch,
+			mode: manifest?.mode ?? "interactive",
+			status: this.activeSessions.has(id) || meta.active ? "active" : "completed",
+			lastActivity: null,
+			lastError: null,
+			worktreePath: manifest?.worktreePath ?? null,
+			agentSessionId: meta.sessionId,
+			createdAt: meta.firstTimestamp,
+			updatedAt: meta.lastTimestamp,
+		};
 	}
 
 	getMessages(sessionId: string, fromIdx?: number) {
-		if (fromIdx !== undefined) {
-			return this.messagesRepo.findBySessionFrom(sessionId, fromIdx);
+		// For active Tricorder sessions, check in-memory buffer first
+		const active = this.activeSessions.get(sessionId);
+		if (active && active.messageBuffer.length > 0) {
+			const msgs = active.messageBuffer.map((msg, i) => ({
+				index: i,
+				type:
+					typeof msg === "object" && msg !== null && "type" in msg
+						? String((msg as Record<string, unknown>).type)
+						: "unknown",
+				content: msg,
+				timestamp: new Date().toISOString(),
+			}));
+			if (fromIdx !== undefined) return msgs.filter((m) => m.index >= fromIdx);
+			return msgs;
 		}
-		return this.messagesRepo.findBySession(sessionId);
+		// Fall back to JSONL history
+		return this.claudeSessionsService.getMessages(sessionId, fromIdx);
 	}
 
 	subscribe(sessionId: string, callback: (msg: unknown) => void): () => void {
@@ -166,15 +170,6 @@ export class SessionService {
 			active.abortController.abort();
 			this.activeSessions.delete(sessionId);
 		}
-		const session = this.getById(sessionId);
-		this.sessionsRepo.updateStatus(sessionId, "paused");
-		this.activityRepo.insert({
-			id: randomUUID(),
-			sessionId,
-			sessionName: session.name,
-			type: "paused",
-			description: "Session paused by user",
-		});
 	}
 
 	cancel(sessionId: string) {
@@ -183,15 +178,6 @@ export class SessionService {
 			active.abortController.abort();
 			this.activeSessions.delete(sessionId);
 		}
-		const session = this.getById(sessionId);
-		this.sessionsRepo.updateStatus(sessionId, "cancelled");
-		this.activityRepo.insert({
-			id: randomUUID(),
-			sessionId,
-			sessionName: session.name,
-			type: "cancelled",
-			description: "Session cancelled by user",
-		});
 	}
 
 	async sendMessage(sessionId: string, message: string) {
@@ -203,7 +189,6 @@ export class SessionService {
 			throw new Error("Session has no worktree path — cannot resume");
 		}
 
-		const sessionName = session.name;
 		const abortController = new AbortController();
 		const activeSession: ActiveSession = {
 			abortController,
@@ -212,51 +197,25 @@ export class SessionService {
 		};
 		this.activeSessions.set(sessionId, activeSession);
 
-		this.sessionsRepo.updateStatus(sessionId, "active");
-
 		this.agentService.startSession({
 			prompt: message,
 			cwd: session.worktreePath,
 			mode: session.mode as "autonomous" | "interactive",
 			resumeSessionId: session.agentSessionId,
 			callbacks: {
-				onSessionId: (agentSessionId: string) => {
-					this.sessionsRepo.updateAgentSession(sessionId, agentSessionId);
+				onSessionId: (_agentSessionId: string) => {
+					// Session already tracked in manifest
 				},
 				onMessage: (msg: unknown) => {
 					activeSession.messageBuffer.push(msg);
-					const existingCount = this.messagesRepo.countBySession(sessionId);
-					const idx = existingCount + activeSession.messageBuffer.length - 1;
-					const type =
-						typeof msg === "object" && msg !== null && "type" in msg
-							? String((msg as Record<string, unknown>).type)
-							: "unknown";
-					this.messagesRepo.insert(sessionId, idx, type, msg);
-					this.sessionsRepo.updateActivity(sessionId, type);
 					for (const subscriber of activeSession.subscribers) {
 						subscriber(msg);
 					}
 				},
 				onComplete: () => {
-					this.sessionsRepo.updateStatus(sessionId, "completed");
-					this.activityRepo.insert({
-						id: randomUUID(),
-						sessionId,
-						sessionName,
-						type: "completed",
-						description: "Session completed successfully",
-					});
 					this.activeSessions.delete(sessionId);
 				},
-				onError: (error: Error) => {
-					this.sessionsRepo.updateError(sessionId, error.message);
-					this.activityRepo.insert({
-						id: randomUUID(),
-						sessionId,
-						sessionName,
-						type: "error",
-						description: `Session error: ${error.message}`,
-					});
+				onError: (_error: Error) => {
 					this.activeSessions.delete(sessionId);
 				},
 			},
@@ -271,7 +230,9 @@ export class SessionService {
 			throw new Error(`Cannot hand off an active session. Current status: ${session.status}`);
 		}
 
-		const resumeCommand = session.agentSessionId ? `claude --resume ${session.agentSessionId}` : `claude`;
+		const resumeCommand = session.agentSessionId
+			? `claude --resume ${session.agentSessionId}`
+			: `claude`;
 
 		return {
 			sessionId: session.id,
@@ -281,7 +242,40 @@ export class SessionService {
 		};
 	}
 
-	getActivityFeed(limit?: number) {
-		return this.activityRepo.findRecent(limit);
+	getActivityFeed(limit = 50) {
+		const sessions = this.claudeSessionsService.listSessions();
+		const events: Array<{
+			id: string;
+			sessionId: string;
+			sessionName: string;
+			type: string;
+			description: string;
+			timestamp: string;
+		}> = [];
+
+		for (const session of sessions) {
+			events.push({
+				id: `${session.sessionId}-created`,
+				sessionId: session.sessionId,
+				sessionName: session.name,
+				type: "created",
+				description: `Session started in ${session.repoName}`,
+				timestamp: session.firstTimestamp,
+			});
+			if (!session.active) {
+				events.push({
+					id: `${session.sessionId}-completed`,
+					sessionId: session.sessionId,
+					sessionName: session.name,
+					type: "completed",
+					description: "Session completed",
+					timestamp: session.lastTimestamp,
+				});
+			}
+		}
+
+		return events
+			.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+			.slice(0, limit);
 	}
 }

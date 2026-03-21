@@ -8,16 +8,14 @@ import React, { useState, useMemo } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-type SessionStatus = "running" | "waiting" | "paused" | "completed" | "local" | "error";
+type SessionStatus = "running" | "waiting" | "paused" | "completed" | "error";
 
-const SEGMENTS = ["All", "Active", "Paused", "Done", "Local"];
+const SEGMENTS = ["All", "Active", "Done"];
 
 const SEGMENT_STATUS_MAP: Record<string, SessionStatus[] | null> = {
 	All: null,
 	Active: ["running", "waiting"],
-	Paused: ["paused"],
 	Done: ["completed"],
-	Local: ["local"],
 };
 
 export default function SessionsScreen() {
@@ -26,34 +24,20 @@ export default function SessionsScreen() {
 	const [activeSegment, setActiveSegment] = useState(0);
 
 	const { data: serverSessions, isLoading } = trpc.sessions.list.useQuery();
-	const { data: localSessions } = trpc.localSessions.list.useQuery();
 	const { data: usage } = trpc.usage.current.useQuery();
 	const usagePercentage = usage?.available ? (usage.tiers[0]?.percentage ?? 0) : 0;
 
-	// Map server + local sessions to unified UI shape
 	const sessions = useMemo(() => {
-		const mapped = (serverSessions ?? []).map((s) => ({
+		if (!serverSessions) return [];
+		return serverSessions.map((s) => ({
 			id: s.id,
 			name: s.name,
 			repoName: s.repoName,
 			mode: s.mode as "autonomous" | "interactive",
 			status: (s.status === "active" ? "running" : s.status === "cancelled" ? "completed" : s.status) as SessionStatus,
 			lastActivity: s.lastActivity || s.lastError || "",
-			isLocal: false,
 		}));
-
-		const local = (localSessions ?? []).map((s) => ({
-			id: s.id,
-			name: s.name,
-			repoName: s.directory.split("/").pop() ?? s.directory,
-			mode: "interactive" as const,
-			status: "local" as SessionStatus,
-			lastActivity: s.active ? "Active in terminal" : "Idle",
-			isLocal: true,
-		}));
-
-		return [...mapped, ...local];
-	}, [serverSessions, localSessions]);
+	}, [serverSessions]);
 
 	const filteredSessions = useMemo(() => {
 		const allowedStatuses = SEGMENT_STATUS_MAP[SEGMENTS[activeSegment]];
