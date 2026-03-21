@@ -367,6 +367,16 @@ export default function SessionScreen() {
 				contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
 				ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
 				showsVerticalScrollIndicator={false}
+				ListFooterComponent={
+					isActive ? (
+						<View className="flex-row items-center gap-2 p-4 mt-3">
+							<View className="bg-ink-dark rounded-xl px-4 py-3 flex-row items-center gap-2">
+								<Feather name="star" size={14} color="#EA580C" />
+								<Text className="font-dm-sans text-sm text-white/70">Claude is thinking...</Text>
+							</View>
+						</View>
+					) : null
+				}
 			/>
 
 			{/* ── Bottom Section ──────────────────────────────────────── */}
