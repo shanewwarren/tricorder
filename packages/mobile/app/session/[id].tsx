@@ -52,7 +52,7 @@ export default function SessionScreen() {
 
 	const { data: sessionData } = trpc.sessions.detail.useQuery(
 		{ id: id! },
-		{ enabled: !!id }
+		{ enabled: !!id, refetchInterval: 10000 }
 	);
 	const utils = trpc.useUtils();
 
