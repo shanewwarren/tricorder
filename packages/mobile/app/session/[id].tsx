@@ -364,7 +364,7 @@ export default function SessionScreen() {
 				ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
 				showsVerticalScrollIndicator={false}
 				ListFooterComponent={
-					isActive || stream?.connected ? (
+					isActive ? (
 						<View className="p-4 mt-1">
 							<View className="bg-ink-dark rounded-xl px-4 py-3 flex-row items-center gap-2 self-start">
 								<Feather name="star" size={14} color="#EA580C" />
