@@ -12,7 +12,10 @@ export async function getServerUrl(): Promise<string> {
 }
 
 export function createTrpcClient(serverUrl: string) {
-	const wsClient = createWSClient({ url: serverUrl.replace("http", "ws") });
+	const wsClient = createWSClient({
+		url: serverUrl.replace("http", "ws"),
+		retryDelayMs: () => 3000,
+	});
 
 	return trpc.createClient({
 		links: [
