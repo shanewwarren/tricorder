@@ -71,16 +71,16 @@ export class ClaudeSessionsService {
 	}
 
 	async getMessages(sessionId: string, fromIdx?: number, limit?: number): Promise<ParsedMessage[]> {
-		const msgLimit = limit ?? 100;
+		const parsedLimit = limit ?? 200;
 
 		let rawMessages;
 		if (fromIdx !== undefined) {
-			// Fetch from a specific offset
-			rawMessages = await getSessionMessages(sessionId, { offset: fromIdx, limit: msgLimit });
+			rawMessages = await getSessionMessages(sessionId, { offset: fromIdx });
 		} else {
-			// Fetch all and take the last N for the most recent messages
-			const allMessages = await getSessionMessages(sessionId);
-			rawMessages = allMessages.slice(-msgLimit);
+			// Fetch all messages — we'll limit the parsed output, not the raw input.
+			// SDK messages are compact (1 per turn), but each expands to multiple
+			// parsed entries (text + tool_use + tool_result blocks).
+			rawMessages = await getSessionMessages(sessionId);
 		}
 
 		const entries: ParsedMessage[] = [];
@@ -141,7 +141,8 @@ export class ClaudeSessionsService {
 			}
 		}
 
-		return entries;
+		// Return the last N parsed entries (most recent messages)
+		return entries.slice(-parsedLimit);
 	}
 
 	isActive(sessionId: string): boolean {
