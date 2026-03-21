@@ -49,6 +49,7 @@ export class AgentService {
 			allowedTools,
 			cwd,
 			abortController,
+			includePartialMessages: true,
 			...(resumeSessionId ? { resume: resumeSessionId } : {}),
 			...(plugins ? { plugins } : {}),
 			...(mcpServers ? { mcpServers } : {}),
