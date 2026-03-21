@@ -70,10 +70,17 @@ export class ClaudeSessionsService {
 	}
 
 	async getMessages(sessionId: string, fromIdx?: number, limit?: number): Promise<ParsedMessage[]> {
-		const rawMessages = await getSessionMessages(sessionId, {
-			offset: fromIdx,
-			limit: limit ?? 100,
-		});
+		const msgLimit = limit ?? 100;
+
+		let rawMessages;
+		if (fromIdx !== undefined) {
+			// Fetch from a specific offset
+			rawMessages = await getSessionMessages(sessionId, { offset: fromIdx, limit: msgLimit });
+		} else {
+			// Fetch all and take the last N for the most recent messages
+			const allMessages = await getSessionMessages(sessionId);
+			rawMessages = allMessages.slice(-msgLimit);
+		}
 
 		const entries: ParsedMessage[] = [];
 		let index = fromIdx ?? 0;
