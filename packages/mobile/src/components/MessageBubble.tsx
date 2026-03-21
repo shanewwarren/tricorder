@@ -1,6 +1,8 @@
 import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Text, View } from "react-native";
+import Markdown from "react-native-markdown-display";
+import { darkMarkdownStyles } from "@/src/lib/markdownStyles";
 
 interface MessageBubbleProps {
 	content: string;
@@ -37,17 +39,8 @@ export function MessageBubble({ content }: MessageBubbleProps) {
 				</Text>
 			</View>
 
-			{/* Body text */}
-			<Text
-				style={{
-					fontFamily: "DM Sans",
-					fontSize: 13,
-					color: "#FFFFFF",
-					lineHeight: 13 * 1.6,
-				}}
-			>
-				{content}
-			</Text>
+			{/* Body */}
+			<Markdown style={darkMarkdownStyles}>{content}</Markdown>
 		</View>
 	);
 }
