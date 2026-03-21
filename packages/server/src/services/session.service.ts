@@ -189,11 +189,13 @@ export class SessionService {
 
 	async sendMessage(sessionId: string, message: string) {
 		const session = await this.getById(sessionId);
-		if (!session.agentSessionId) {
-			throw new Error("Session has no agent session ID — cannot resume");
-		}
-		if (!session.worktreePath) {
-			throw new Error("Session has no worktree path — cannot resume");
+		// agentSessionId is the Claude session ID — for terminal sessions it's the sessionId itself
+		const agentId = session.agentSessionId || sessionId;
+		// Use worktree path if available, otherwise the project directory
+		const meta = await this.claudeSessionsService.getSessionMeta(sessionId);
+		const cwd = session.worktreePath || meta?.projectDir;
+		if (!cwd) {
+			throw new Error("Cannot determine working directory for session");
 		}
 
 		const abortController = new AbortController();
@@ -206,9 +208,9 @@ export class SessionService {
 
 		this.agentService.startSession({
 			prompt: message,
-			cwd: session.worktreePath,
+			cwd,
 			mode: session.mode as "autonomous" | "interactive",
-			resumeSessionId: session.agentSessionId,
+			resumeSessionId: agentId,
 			callbacks: {
 				onSessionId: (_agentSessionId: string) => {
 					// Session already tracked in manifest

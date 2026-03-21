@@ -12,7 +12,7 @@ import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -43,6 +43,7 @@ export default function SessionScreen() {
 	const [inputText, setInputText] = useState("");
 	const [now, setNow] = useState(Date.now());
 	const [showPrompt, setShowPrompt] = useState(false);
+	const [showHandoffSheet, setShowHandoffSheet] = useState(false);
 
 	const initStream = useStreamStore((s) => s.initStream);
 	const addMessage = useStreamStore((s) => s.addMessage);
@@ -153,8 +154,6 @@ export default function SessionScreen() {
 
 	const isActive = session.status === "active";
 	const isError = session.status === "error";
-	const showInput = isActive;
-	const showHandoff = !isActive;
 
 	// Map server status to UI status for StatusPill
 	const uiStatus = session.status === "active" ? "running" :
@@ -375,7 +374,7 @@ export default function SessionScreen() {
 				}
 			/>
 
-			{/* ── Bottom Section ──────────────────────────────────────── */}
+			{/* ── Bottom Section — Always show input ──────────────────── */}
 			<View
 				className="border-t"
 				style={{
@@ -383,31 +382,55 @@ export default function SessionScreen() {
 					paddingBottom: insets.bottom || 16,
 				}}
 			>
-				{showInput ? (
-					<View className="flex-row items-center px-4 pt-3 gap-[10px]">
-						<TextInput
-							value={inputText}
-							onChangeText={setInputText}
-							placeholder="Send a message..."
-							placeholderTextColor="#A8A29E"
-							className="flex-1 h-10 bg-surface-card rounded-full px-4 font-dm-sans text-md text-ink-dark"
-							returnKeyType="send"
-							onSubmitEditing={handleSend}
-						/>
-						<Pressable
-							onPress={handleSend}
-							className="w-10 h-10 rounded-full items-center justify-center"
-							style={({ pressed }) => ({
-								backgroundColor: pressed ? "#D35407" : "#EA580C",
-							})}
-						>
-							<Feather name="send" size={18} color="#FFFFFF" />
-						</Pressable>
-					</View>
-				) : (
-					<HandoffBanner command={handoff?.resumeCommand ?? `tricorder resume ${session.name.toLowerCase().replace(/\s+/g, "-")}`} />
-				)}
+				<View className="flex-row items-center px-4 pt-3 gap-2">
+					<Pressable
+						onPress={() => setShowHandoffSheet(true)}
+						className="w-10 h-10 rounded-full items-center justify-center bg-surface-card"
+					>
+						<Feather name="terminal" size={18} color="#78716C" />
+					</Pressable>
+					<TextInput
+						value={inputText}
+						onChangeText={setInputText}
+						placeholder="Send a follow-up..."
+						placeholderTextColor="#A8A29E"
+						className="flex-1 h-10 bg-surface-card rounded-full px-4 font-dm-sans text-md text-ink-dark"
+						returnKeyType="send"
+						onSubmitEditing={handleSend}
+					/>
+					<Pressable
+						onPress={handleSend}
+						className="w-10 h-10 rounded-full items-center justify-center"
+						style={({ pressed }) => ({
+							backgroundColor: pressed ? "#D35407" : "#EA580C",
+						})}
+					>
+						<Feather name="send" size={18} color="#FFFFFF" />
+					</Pressable>
+				</View>
 			</View>
+
+			{/* ── Handoff Sheet ──────────────────────────────────────── */}
+			<Modal
+				visible={showHandoffSheet}
+				transparent
+				animationType="slide"
+				onRequestClose={() => setShowHandoffSheet(false)}
+			>
+				<Pressable
+					className="flex-1"
+					onPress={() => setShowHandoffSheet(false)}
+				/>
+				<View
+					className="bg-surface-elevated rounded-t-2xl"
+					style={{ paddingBottom: insets.bottom || 24 }}
+				>
+					<View className="items-center py-3">
+						<View className="w-10 h-1 rounded-full bg-border-default" />
+					</View>
+					<HandoffBanner command={handoff?.resumeCommand ?? `claude --resume ${session.id}`} />
+				</View>
+			</Modal>
 		</KeyboardAvoidingView>
 	);
 }
