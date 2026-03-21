@@ -2,8 +2,10 @@ import { ApprovalPrompt } from "@/src/components/ApprovalPrompt";
 import { HandoffBanner } from "@/src/components/HandoffBanner";
 import { MessageBubble } from "@/src/components/MessageBubble";
 import { ModeBadge } from "@/src/components/ModeBadge";
+import { ResultSummary } from "@/src/components/ResultSummary";
 import { StatusPill } from "@/src/components/StatusPill";
 import { ToolCard } from "@/src/components/ToolCard";
+import { UserBubble } from "@/src/components/UserBubble";
 import { trpc } from "@/src/lib/trpc";
 import { useStreamStore } from "@/src/lib/store";
 import { Feather } from "@expo/vector-icons";
@@ -356,33 +358,58 @@ export default function SessionScreen() {
 				showsVerticalScrollIndicator={false}
 			>
 				{displayMessages.map((msg, i) => {
-					if (msg.type === "assistant" || msg.type === "result") {
-						const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
-						return <MessageBubble key={i} content={text} />;
+					switch (msg.type) {
+						case "user": {
+							const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
+							return <UserBubble key={i} content={text} />;
+						}
+						case "assistant": {
+							const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
+							if (!text || text === '""') return null;
+							return <MessageBubble key={i} content={text} />;
+						}
+						case "tool_use": {
+							const content = msg.content as any;
+							// Find matching tool_result in subsequent messages
+							const toolResult = displayMessages.find(
+								(m) => m.type === "tool_result" && (m.content as any)?.tool_use_id === content.id,
+							);
+							return (
+								<ToolCard
+									key={i}
+									type={content.tool ?? "Bash"}
+									title={content.tool ?? "Tool"}
+									detail={content.input?.file_path ?? content.input?.command ?? content.input?.pattern ?? ""}
+									result={toolResult ? {
+										status: (toolResult.content as any)?.is_error ? "error" : "success",
+										output: typeof (toolResult.content as any)?.content === "string"
+											? (toolResult.content as any).content
+											: JSON.stringify((toolResult.content as any)?.content ?? ""),
+									} : undefined}
+								/>
+							);
+						}
+						case "tool_result":
+							// Rendered inline with tool_use above
+							return null;
+						case "result": {
+							const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
+							return <ResultSummary key={i} content={text} />;
+						}
+						case "approval_request": {
+							const content = msg.content as any;
+							return (
+								<ApprovalPrompt
+									key={i}
+									action={content.description ?? "Pending approval"}
+									onApprove={() => {}}
+									onDeny={() => {}}
+								/>
+							);
+						}
+						default:
+							return null;
 					}
-					if (msg.type === "tool_use") {
-						const content = msg.content as any;
-						return (
-							<ToolCard
-								key={i}
-								type={content.tool ?? "Bash"}
-								title={content.tool ?? "Tool"}
-								detail={content.input?.file_path ?? content.input?.command ?? ""}
-							/>
-						);
-					}
-					if (msg.type === "approval_request") {
-						const content = msg.content as any;
-						return (
-							<ApprovalPrompt
-								key={i}
-								action={content.description ?? "Pending approval"}
-								onApprove={() => {}}
-								onDeny={() => {}}
-							/>
-						);
-					}
-					return null;
 				})}
 			</ScrollView>
 

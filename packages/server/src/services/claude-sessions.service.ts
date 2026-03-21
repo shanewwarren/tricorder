@@ -74,34 +74,62 @@ export class ClaudeSessionsService {
 			offset: fromIdx,
 		});
 
-		return rawMessages.map((msg, i) => {
-			const index = (fromIdx ?? 0) + i;
-			let content: unknown = "";
+		const entries: ParsedMessage[] = [];
+		let index = fromIdx ?? 0;
 
-			if (msg.message && typeof msg.message === "object" && "content" in msg.message) {
-				const msgContent = (msg.message as any).content;
+		for (const msg of rawMessages) {
+			if (msg.type === "user") {
+				let text = "";
+				if (msg.message && typeof msg.message === "object" && "content" in msg.message) {
+					const msgContent = (msg.message as any).content;
+					if (typeof msgContent === "string") {
+						text = msgContent;
+					} else if (Array.isArray(msgContent)) {
+						text = msgContent
+							.filter((b: any) => b.type === "text")
+							.map((b: any) => b.text)
+							.join("\n");
+					}
+				}
+				entries.push({ index: index++, type: "user", content: text, timestamp: "" });
+			} else if (msg.type === "assistant") {
+				const msgContent =
+					msg.message && typeof msg.message === "object" && "content" in msg.message
+						? (msg.message as any).content
+						: "";
+
 				if (typeof msgContent === "string") {
-					content = msgContent;
+					entries.push({ index: index++, type: "assistant", content: msgContent, timestamp: "" });
 				} else if (Array.isArray(msgContent)) {
-					// Filter out thinking blocks, keep text and tool blocks
-					const relevant = msgContent.filter(
-						(block: any) => block.type === "text" || block.type === "tool_use" || block.type === "tool_result",
-					);
-					if (relevant.length === 1 && relevant[0].type === "text") {
-						content = relevant[0].text;
-					} else if (relevant.length > 0) {
-						content = relevant;
+					for (const block of msgContent) {
+						if (block.type === "text") {
+							entries.push({ index: index++, type: "assistant", content: block.text, timestamp: "" });
+						} else if (block.type === "tool_use") {
+							entries.push({
+								index: index++,
+								type: "tool_use",
+								content: { tool: block.name, input: block.input, id: block.id },
+								timestamp: "",
+							});
+						} else if (block.type === "tool_result") {
+							entries.push({
+								index: index++,
+								type: "tool_result",
+								content: {
+									tool_use_id: block.tool_use_id,
+									content: block.content,
+									is_error: block.is_error,
+								},
+								timestamp: "",
+							});
+						}
+						// Skip "thinking" blocks and any other unknown types
 					}
 				}
 			}
+		}
 
-			return {
-				index,
-				type: msg.type,
-				content,
-				timestamp: "",
-			};
-		});
+		return entries;
 	}
 
 	isActive(sessionId: string): boolean {
