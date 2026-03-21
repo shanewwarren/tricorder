@@ -23,7 +23,7 @@ export function UsageCard({ label, subtitle, percentage, resetIn, dollarAmount, 
 	const color = getColor(displayPercentage);
 
 	return (
-		<View className="bg-bg-surface-card rounded-2xl p-4">
+		<View className="bg-surface-card rounded-2xl p-4">
 			{/* Header */}
 			<View className="flex-row justify-between items-center mb-2">
 				<Text className="font-dm-sans text-xl font-semibold text-ink-primary">

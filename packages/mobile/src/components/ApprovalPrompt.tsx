@@ -10,7 +10,7 @@ interface ApprovalPromptProps {
 
 export function ApprovalPrompt({ action, onApprove, onDeny }: ApprovalPromptProps) {
 	return (
-		<View className="bg-bg-surface-elevated rounded-md border-[1.5px] border-primary p-[14px] gap-[10px]">
+		<View className="bg-surface-elevated rounded-md border-[1.5px] border-primary p-[14px] gap-[10px]">
 			{/* Header */}
 			<View className="flex-row items-center gap-2">
 				<Feather name="shield" size={16} color="#EA580C" />

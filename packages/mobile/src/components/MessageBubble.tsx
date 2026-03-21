@@ -10,7 +10,7 @@ interface MessageBubbleProps {
 
 export function MessageBubble({ content }: MessageBubbleProps) {
 	return (
-		<View className="bg-text-ink-dark rounded-xl p-4 gap-2">
+		<View className="bg-ink-dark rounded-xl p-4 gap-2">
 			{/* Label row */}
 			<View className="flex-row items-center gap-1.5">
 				<Feather name="star" size={14} color="#EA580C" />

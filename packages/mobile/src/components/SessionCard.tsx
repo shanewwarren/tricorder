@@ -25,7 +25,7 @@ export function SessionCard({ session }: SessionCardProps) {
 	return (
 		<Pressable
 			onPress={() => router.push(`/session/${session.id}` as any)}
-			className="bg-bg-surface-card rounded-2xl p-4 px-[18px] gap-[10px]"
+			className="bg-surface-card rounded-2xl p-4 px-[18px] gap-[10px]"
 			style={({ pressed }) => ({
 				opacity: pressed ? 0.8 : 1,
 			})}
