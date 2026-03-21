@@ -10,14 +10,20 @@ interface UserBubbleProps {
 
 export function UserBubble({ content }: UserBubbleProps) {
 	return (
-		<View className="bg-surface-card rounded-xl p-4 gap-2">
+		<View className="bg-surface-card rounded-xl p-4 gap-2" style={{ flexShrink: 1 }}>
 			<View className="flex-row items-center gap-1.5">
 				<Feather name="user" size={16} color="#78716C" />
 				<Text className="font-dm-sans text-sm font-semibold text-ink-secondary">
 					You
 				</Text>
 			</View>
-			<Markdown style={lightMarkdownStyles}>{content}</Markdown>
+			{content ? (
+				<Markdown style={lightMarkdownStyles}>{content}</Markdown>
+			) : (
+				<Text className="font-dm-sans text-base text-ink-secondary italic">
+					(empty message)
+				</Text>
+			)}
 		</View>
 	);
 }

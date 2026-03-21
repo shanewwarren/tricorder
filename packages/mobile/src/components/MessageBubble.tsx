@@ -10,7 +10,7 @@ interface MessageBubbleProps {
 
 export function MessageBubble({ content }: MessageBubbleProps) {
 	return (
-		<View className="bg-ink-dark rounded-xl p-4 gap-2">
+		<View className="bg-ink-dark rounded-xl p-4 gap-2" style={{ flexShrink: 1 }}>
 			{/* Label row */}
 			<View className="flex-row items-center gap-1.5">
 				<Feather name="star" size={14} color="#EA580C" />
@@ -20,7 +20,13 @@ export function MessageBubble({ content }: MessageBubbleProps) {
 			</View>
 
 			{/* Body */}
-			<Markdown style={darkMarkdownStyles}>{content}</Markdown>
+			{content ? (
+				<Markdown style={darkMarkdownStyles}>{content}</Markdown>
+			) : (
+				<Text className="font-dm-sans text-base text-white/50 italic">
+					(empty response)
+				</Text>
+			)}
 		</View>
 	);
 }

@@ -283,6 +283,7 @@ export default function SessionScreen() {
 					switch (msg.type) {
 						case "user": {
 							const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
+							if (!text || text === '""') return null;
 							return <UserBubble key={i} content={text} />;
 						}
 						case "assistant": {
