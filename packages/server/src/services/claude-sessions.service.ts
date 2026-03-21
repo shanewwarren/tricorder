@@ -1,7 +1,8 @@
 import { basename } from "path";
 import { homedir } from "os";
 import { join } from "path";
-import { readdirSync, readFileSync, existsSync } from "fs";
+import { readdirSync, readFileSync, existsSync, statSync, watch } from "fs";
+import type { FSWatcher } from "fs";
 import {
 	listSessions,
 	getSessionInfo,
@@ -170,6 +171,125 @@ export class ClaudeSessionsService {
 	async fork(sessionId: string, options?: { upToMessageId?: string; title?: string }): Promise<{ sessionId: string }> {
 		const result = await forkSession(sessionId, options);
 		return { sessionId: result.sessionId };
+	}
+
+	// --- JSONL file watcher for live tailing ---
+
+	/**
+	 * Watch a session's JSONL file for new lines and call onNewMessage
+	 * for each new user/assistant/tool message. Returns an unsubscribe function.
+	 */
+	watchSession(sessionId: string, onNewMessage: (msg: ParsedMessage) => void): () => void {
+		const filePath = this.findSessionFile(sessionId);
+		if (!filePath) return () => {};
+
+		let fileSize = 0;
+		try {
+			fileSize = statSync(filePath).size;
+		} catch {
+			return () => {};
+		}
+
+		let index = 0;
+		let watcher: FSWatcher | null = null;
+
+		try {
+			watcher = watch(filePath, () => {
+				try {
+					const newSize = statSync(filePath).size;
+					if (newSize <= fileSize) return;
+
+					// Read only the new bytes
+					const fd = require("fs").openSync(filePath, "r");
+					const buffer = Buffer.alloc(newSize - fileSize);
+					require("fs").readSync(fd, buffer, 0, buffer.length, fileSize);
+					require("fs").closeSync(fd);
+					fileSize = newSize;
+
+					const newContent = buffer.toString("utf-8");
+					const lines = newContent.split("\n").filter((l: string) => l.trim());
+
+					for (const line of lines) {
+						try {
+							const entry = JSON.parse(line);
+							const parsed = this.parseJsonlEntry(entry, index);
+							if (parsed.length > 0) {
+								for (const msg of parsed) {
+									onNewMessage(msg);
+									index++;
+								}
+							}
+						} catch {}
+					}
+				} catch {}
+			});
+		} catch {
+			return () => {};
+		}
+
+		return () => {
+			watcher?.close();
+		};
+	}
+
+	private findSessionFile(sessionId: string): string | null {
+		const projectsDir = join(homedir(), ".claude", "projects");
+		if (!existsSync(projectsDir)) return null;
+
+		try {
+			const dirs = readdirSync(projectsDir, { withFileTypes: true });
+			for (const dir of dirs) {
+				if (!dir.isDirectory()) continue;
+				const candidate = join(projectsDir, dir.name, `${sessionId}.jsonl`);
+				if (existsSync(candidate)) return candidate;
+			}
+		} catch {}
+
+		return null;
+	}
+
+	private parseJsonlEntry(entry: any, baseIndex: number): ParsedMessage[] {
+		const results: ParsedMessage[] = [];
+		const msgContent = entry.message?.content ?? "";
+		const type = entry.type;
+
+		if (type === "user") {
+			if (typeof msgContent === "string" && msgContent) {
+				results.push({ index: baseIndex, type: "user", content: msgContent, timestamp: entry.timestamp ?? "" });
+			} else if (Array.isArray(msgContent)) {
+				const text = msgContent.filter((b: any) => b.type === "text").map((b: any) => b.text).join("\n");
+				if (text) results.push({ index: baseIndex, type: "user", content: text, timestamp: entry.timestamp ?? "" });
+				for (const block of msgContent) {
+					if (block.type === "tool_result") {
+						results.push({
+							index: baseIndex,
+							type: "tool_result",
+							content: { tool_use_id: block.tool_use_id, content: block.content, is_error: block.is_error },
+							timestamp: entry.timestamp ?? "",
+						});
+					}
+				}
+			}
+		} else if (type === "assistant") {
+			if (typeof msgContent === "string" && msgContent) {
+				results.push({ index: baseIndex, type: "assistant", content: msgContent, timestamp: entry.timestamp ?? "" });
+			} else if (Array.isArray(msgContent)) {
+				for (const block of msgContent) {
+					if (block.type === "text" && block.text) {
+						results.push({ index: baseIndex, type: "assistant", content: block.text, timestamp: entry.timestamp ?? "" });
+					} else if (block.type === "tool_use") {
+						results.push({
+							index: baseIndex,
+							type: "tool_use",
+							content: { tool: block.name, input: block.input, id: block.id },
+							timestamp: entry.timestamp ?? "",
+						});
+					}
+				}
+			}
+		}
+
+		return results;
 	}
 
 	// --- Private helpers ---

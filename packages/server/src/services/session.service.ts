@@ -155,14 +155,20 @@ export class SessionService {
 	}
 
 	subscribe(sessionId: string, callback: (msg: unknown) => void): () => void {
+		// For Tricorder-launched sessions, use in-memory subscribers
 		const active = this.activeSessions.get(sessionId);
-		if (!active) {
-			return () => {};
+		if (active) {
+			active.subscribers.add(callback);
+			return () => {
+				active.subscribers.delete(callback);
+			};
 		}
-		active.subscribers.add(callback);
-		return () => {
-			active.subscribers.delete(callback);
-		};
+
+		// For terminal-launched sessions, tail the JSONL file
+		const unwatch = this.claudeSessionsService.watchSession(sessionId, (msg) => {
+			callback(msg);
+		});
+		return unwatch;
 	}
 
 	pause(sessionId: string) {
