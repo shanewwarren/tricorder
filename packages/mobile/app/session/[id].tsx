@@ -17,8 +17,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function formatElapsed(seconds: number): string {
-	const m = Math.floor(seconds / 60);
+	const d = Math.floor(seconds / 86400);
+	const h = Math.floor((seconds % 86400) / 3600);
+	const m = Math.floor((seconds % 3600) / 60);
 	const s = seconds % 60;
+	if (d > 0) return `${d}d ${h}h ${m}m`;
+	if (h > 0) return `${h}h ${m}m ${s}s`;
 	return `${m}m ${s}s`;
 }
 
