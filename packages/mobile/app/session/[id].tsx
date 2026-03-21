@@ -311,17 +311,27 @@ export default function SessionScreen() {
 							const toolResult = displayMessages.find(
 								(m) => m.type === "tool_result" && (m.content as any)?.tool_use_id === content.id,
 							);
+							// Extract diff for Edit tools
+							const editDiff = content.tool === "Edit" && content.input?.old_string && content.input?.new_string
+								? {
+									removed: content.input.old_string.split("\n"),
+									added: content.input.new_string.split("\n"),
+								}
+								: undefined;
+							// Extract result output
+							const resultData = toolResult ? {
+								status: (toolResult.content as any)?.is_error ? "error" as const : "success" as const,
+								output: typeof (toolResult.content as any)?.content === "string"
+									? (toolResult.content as any).content
+									: JSON.stringify((toolResult.content as any)?.content ?? ""),
+							} : undefined;
 							bubble = (
 								<ToolCard
 									type={content.tool ?? "Bash"}
 									title={content.tool ?? "Tool"}
 									detail={content.input?.file_path ?? content.input?.command ?? content.input?.pattern ?? ""}
-									result={toolResult ? {
-										status: (toolResult.content as any)?.is_error ? "error" : "success",
-										output: typeof (toolResult.content as any)?.content === "string"
-											? (toolResult.content as any).content
-											: JSON.stringify((toolResult.content as any)?.content ?? ""),
-									} : undefined}
+									diff={editDiff}
+									result={resultData}
 								/>
 							);
 							break;

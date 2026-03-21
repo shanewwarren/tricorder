@@ -47,8 +47,8 @@ export function ToolCard({ type, title, detail, diff, result }: ToolCardProps) {
 			{/* Diff section for Edit */}
 			{type === "Edit" && diff && <DiffView removed={diff.removed} added={diff.added} />}
 
-			{/* Result section for Bash */}
-			{type === "Bash" && result && (
+			{/* Result section */}
+			{result && (
 				<View
 					className="rounded-sm p-2 flex-row items-center gap-[6px]"
 					style={{
