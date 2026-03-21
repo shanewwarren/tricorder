@@ -10,8 +10,9 @@ import { trpc } from "@/src/lib/trpc";
 import { useStreamStore } from "@/src/lib/store";
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { FlashList } from "@shopify/flash-list";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -32,7 +33,7 @@ export default function SessionScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const router = useRouter();
 	const insets = useSafeAreaInsets();
-	const scrollRef = useRef<ScrollView>(null);
+	const listRef = useRef<FlashList<any>>(null);
 	const [inputText, setInputText] = useState("");
 	const [now, setNow] = useState(Date.now());
 	const [showPrompt, setShowPrompt] = useState(false);
@@ -129,18 +130,13 @@ export default function SessionScreen() {
 		return merged;
 	}, [stream?.messages, messages]);
 
-	// Auto-scroll only on first load or when new messages arrive (not on every poll)
+	// Auto-scroll only on first load or when new messages arrive
 	const prevMessageCount = useRef(0);
 	useEffect(() => {
-		if (displayMessages.length > prevMessageCount.current) {
-			// Only auto-scroll if count actually increased
-			if (prevMessageCount.current === 0) {
-				// First load — scroll without animation
-				setTimeout(() => scrollRef.current?.scrollToEnd({ animated: false }), 100);
-			} else {
-				// New message — scroll with animation
-				setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
-			}
+		if (displayMessages.length > prevMessageCount.current && displayMessages.length > 0) {
+			setTimeout(() => {
+				listRef.current?.scrollToEnd({ animated: prevMessageCount.current > 0 });
+			}, 100);
 			prevMessageCount.current = displayMessages.length;
 		}
 	}, [displayMessages.length]);
@@ -280,37 +276,29 @@ export default function SessionScreen() {
 			</View>
 
 			{/* ── Message Stream ──────────────────────────────────────── */}
-			<ScrollView
-				ref={scrollRef}
-				className="flex-1"
-				contentContainerStyle={{
-					padding: 16,
-					gap: 12,
-					paddingBottom: 24,
-				}}
-				showsVerticalScrollIndicator={false}
-			>
-				{displayMessages.map((msg, i) => {
+			<FlashList
+				ref={listRef}
+				data={displayMessages.filter((m) => m.type !== "tool_result")}
+				keyExtractor={(item, i) => `${item.type}-${(item as any).index ?? i}`}
+				renderItem={({ item: msg }) => {
 					switch (msg.type) {
 						case "user": {
 							const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
 							if (!text || text === '""') return null;
-							return <UserBubble key={i} content={text} />;
+							return <UserBubble content={text} />;
 						}
 						case "assistant": {
 							const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
 							if (!text || text === '""') return null;
-							return <MessageBubble key={i} content={text} />;
+							return <MessageBubble content={text} />;
 						}
 						case "tool_use": {
 							const content = msg.content as any;
-							// Find matching tool_result in subsequent messages
 							const toolResult = displayMessages.find(
 								(m) => m.type === "tool_result" && (m.content as any)?.tool_use_id === content.id,
 							);
 							return (
 								<ToolCard
-									key={i}
 									type={content.tool ?? "Bash"}
 									title={content.tool ?? "Tool"}
 									detail={content.input?.file_path ?? content.input?.command ?? content.input?.pattern ?? ""}
@@ -323,18 +311,14 @@ export default function SessionScreen() {
 								/>
 							);
 						}
-						case "tool_result":
-							// Rendered inline with tool_use above
-							return null;
 						case "result": {
 							const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
-							return <ResultSummary key={i} content={text} />;
+							return <ResultSummary content={text} />;
 						}
 						case "approval_request": {
 							const content = msg.content as any;
 							return (
 								<ApprovalPrompt
-									key={i}
 									action={content.description ?? "Pending approval"}
 									onApprove={() => {}}
 									onDeny={() => {}}
@@ -344,8 +328,12 @@ export default function SessionScreen() {
 						default:
 							return null;
 					}
-				})}
-			</ScrollView>
+				}}
+				estimatedItemSize={80}
+				contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+				ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+				showsVerticalScrollIndicator={false}
+			/>
 
 			{/* ── Bottom Section ──────────────────────────────────────── */}
 			<View
