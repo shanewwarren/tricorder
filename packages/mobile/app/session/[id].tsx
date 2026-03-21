@@ -126,7 +126,8 @@ export default function SessionScreen() {
 		const deduped: typeof messages = [];
 		for (const msg of all) {
 			const ts = (msg as any).timestamp ?? "";
-			const key = `${msg.type}:${ts}:${typeof msg.content === "string" ? msg.content.slice(0, 50) : JSON.stringify(msg.content).slice(0, 50)}`;
+			const contentStr = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content ?? "");
+			const key = `${msg.type}:${ts}:${contentStr.slice(0, 50)}`;
 			if (!seen.has(key)) {
 				seen.add(key);
 				deduped.push(msg);
