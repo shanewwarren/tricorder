@@ -111,29 +111,29 @@ export default function SessionScreen() {
 		{ enabled: !!session && session.status !== "active" }
 	);
 
-	// Merge stream and query messages, deduplicate by index
+	// Merge stream and query messages, deduplicate and sort by timestamp
 	const displayMessages = useMemo(() => {
-		const seen = new Set<number>();
-		const merged: typeof messages = [];
-		// Stream messages take priority (most recent)
-		if (stream?.messages) {
-			for (const msg of stream.messages) {
-				const idx = (msg as any).index ?? merged.length;
-				if (!seen.has(idx)) {
-					seen.add(idx);
-					merged.push(msg);
-				}
+		const all = [...messages, ...(stream?.messages ?? [])];
+
+		// Deduplicate by content+timestamp (since indices aren't reliable across sources)
+		const seen = new Set<string>();
+		const deduped: typeof messages = [];
+		for (const msg of all) {
+			const ts = (msg as any).timestamp ?? "";
+			const key = `${msg.type}:${ts}:${typeof msg.content === "string" ? msg.content.slice(0, 50) : JSON.stringify(msg.content).slice(0, 50)}`;
+			if (!seen.has(key)) {
+				seen.add(key);
+				deduped.push(msg);
 			}
 		}
-		// Fill in any query messages not already seen
-		for (const msg of messages) {
-			const idx = (msg as any).index ?? merged.length;
-			if (!seen.has(idx)) {
-				seen.add(idx);
-				merged.push(msg);
-			}
-		}
-		return merged;
+
+		// Sort by timestamp to ensure correct order
+		return deduped.sort((a, b) => {
+			const ta = (a as any).timestamp ?? "";
+			const tb = (b as any).timestamp ?? "";
+			if (!ta || !tb) return 0;
+			return ta.localeCompare(tb);
+		});
 	}, [stream?.messages, messages]);
 
 	// Auto-scroll only on first load or when new messages arrive
