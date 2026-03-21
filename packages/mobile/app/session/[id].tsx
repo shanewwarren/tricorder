@@ -45,7 +45,7 @@ export default function SessionScreen() {
 
 	const { data: sessionData } = trpc.sessions.detail.useQuery(
 		{ id: id! },
-		{ enabled: !!id, refetchInterval: stream?.connected ? false : 5000 }
+		{ enabled: !!id }
 	);
 	const utils = trpc.useUtils();
 
@@ -129,9 +129,20 @@ export default function SessionScreen() {
 		return merged;
 	}, [stream?.messages, messages]);
 
-	// Auto-scroll to bottom when messages change
+	// Auto-scroll only on first load or when new messages arrive (not on every poll)
+	const prevMessageCount = useRef(0);
 	useEffect(() => {
-		setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+		if (displayMessages.length > prevMessageCount.current) {
+			// Only auto-scroll if count actually increased
+			if (prevMessageCount.current === 0) {
+				// First load — scroll without animation
+				setTimeout(() => scrollRef.current?.scrollToEnd({ animated: false }), 100);
+			} else {
+				// New message — scroll with animation
+				setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+			}
+			prevMessageCount.current = displayMessages.length;
+		}
 	}, [displayMessages.length]);
 
 	if (!session) {

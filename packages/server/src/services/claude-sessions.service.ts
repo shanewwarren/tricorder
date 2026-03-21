@@ -69,9 +69,10 @@ export class ClaudeSessionsService {
 		};
 	}
 
-	async getMessages(sessionId: string, fromIdx?: number): Promise<ParsedMessage[]> {
+	async getMessages(sessionId: string, fromIdx?: number, limit?: number): Promise<ParsedMessage[]> {
 		const rawMessages = await getSessionMessages(sessionId, {
 			offset: fromIdx,
+			limit: limit ?? 100,
 		});
 
 		const entries: ParsedMessage[] = [];
