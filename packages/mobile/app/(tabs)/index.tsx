@@ -47,66 +47,31 @@ export default function SessionsScreen() {
 
 	return (
 		<View
-			style={{
-				flex: 1,
-				backgroundColor: "#FAFAF9",
-				paddingTop: insets.top,
-			}}
+			className="flex-1 bg-page"
+			style={{ paddingTop: insets.top }}
 		>
 			{/* Header */}
-			<View
-				style={{
-					flexDirection: "row",
-					alignItems: "center",
-					paddingHorizontal: 21,
-					paddingTop: 16,
-					paddingBottom: 12,
-				}}
-			>
-				<Text
-					style={{
-						fontFamily: "DM Sans",
-						fontSize: 32,
-						fontWeight: "700",
-						color: "#1C1917",
-						flex: 1,
-					}}
-				>
+			<View className="flex-row items-center px-[21px] pt-4 pb-3">
+				<Text className="font-dm-sans text-4xl font-bold text-primary flex-1">
 					Sessions
 				</Text>
 
 				<UsageIndicator percentage={usagePercentage} />
 
-				<Pressable
-					style={{
-						marginLeft: 10,
-						width: 36,
-						height: 36,
-						alignItems: "center",
-						justifyContent: "center",
-					}}
-				>
+				<Pressable className="ml-[10px] w-9 h-9 items-center justify-center">
 					<Feather name="bell" size={20} color="#78716C" />
 				</Pressable>
 
 				<Pressable
 					onPress={() => router.push("/new-session" as any)}
-					style={{
-						marginLeft: 6,
-						width: 36,
-						height: 36,
-						borderRadius: 18,
-						backgroundColor: "#EA580C",
-						alignItems: "center",
-						justifyContent: "center",
-					}}
+					className="ml-1.5 w-9 h-9 rounded-full bg-primary items-center justify-center"
 				>
 					<Feather name="plus" size={18} color="#FFFFFF" />
 				</Pressable>
 			</View>
 
 			{/* Segment Control */}
-			<View style={{ paddingHorizontal: 21, marginBottom: 16 }}>
+			<View className="px-[21px] mb-4">
 				<SegmentControl segments={SEGMENTS} activeIndex={activeSegment} onPress={setActiveSegment} />
 			</View>
 
@@ -122,8 +87,8 @@ export default function SessionsScreen() {
 				}}
 				showsVerticalScrollIndicator={false}
 				ListEmptyComponent={
-					<View style={{ paddingTop: 40, alignItems: "center" }}>
-						<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#A8A29E" }}>
+					<View className="pt-10 items-center">
+						<Text className="font-dm-sans text-md text-tertiary">
 							{isLoading ? "Loading sessions..." : "No sessions yet"}
 						</Text>
 					</View>

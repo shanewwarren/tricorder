@@ -7,25 +7,8 @@ interface ModeBadgeProps {
 
 export function ModeBadge({ mode }: ModeBadgeProps) {
 	return (
-		<View
-			style={{
-				backgroundColor: "#EA580C15",
-				borderRadius: 6,
-				paddingHorizontal: 8,
-				paddingVertical: 3,
-				alignItems: "center",
-				justifyContent: "center",
-			}}
-		>
-			<Text
-				style={{
-					fontFamily: "JetBrains Mono",
-					fontSize: 10,
-					fontWeight: "700",
-					letterSpacing: 0.5,
-					color: "#EA580C",
-				}}
-			>
+		<View className="bg-primary/[0.08] rounded-sm px-2 py-[3px] items-center justify-center">
+			<Text className="font-jetbrains text-2xs font-bold tracking-wide text-primary">
 				{mode}
 			</Text>
 		</View>

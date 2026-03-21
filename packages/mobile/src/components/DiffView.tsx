@@ -8,23 +8,11 @@ interface DiffViewProps {
 
 export function DiffView({ removed, added }: DiffViewProps) {
 	return (
-		<View
-			style={{
-				backgroundColor: "rgba(41, 37, 36, 0.06)",
-				borderRadius: 6,
-				padding: 8,
-				gap: 4,
-			}}
-		>
+		<View className="bg-text-dark/[0.06] rounded-sm p-2 gap-1">
 			{removed.map((line, i) => (
 				<Text
 					key={`r-${i}`}
-					style={{
-						fontFamily: "JetBrains Mono",
-						fontSize: 11,
-						color: "#DC2626",
-						lineHeight: 16,
-					}}
+					className="font-jetbrains text-xs text-status-error leading-4"
 				>
 					- {line}
 				</Text>
@@ -32,12 +20,7 @@ export function DiffView({ removed, added }: DiffViewProps) {
 			{added.map((line, i) => (
 				<Text
 					key={`a-${i}`}
-					style={{
-						fontFamily: "JetBrains Mono",
-						fontSize: 11,
-						color: "#16A34A",
-						lineHeight: 16,
-					}}
+					className="font-jetbrains text-xs text-status-running leading-4"
 				>
 					+ {line}
 				</Text>

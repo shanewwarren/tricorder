@@ -19,29 +19,13 @@ export function PillTabBar({ state, navigation }: BottomTabBarProps) {
 
 	return (
 		<View
+			className="absolute bottom-0 left-0 right-0 px-[21px] pt-3"
 			style={{
-				position: "absolute",
-				bottom: 0,
-				left: 0,
-				right: 0,
 				paddingBottom: Math.max(insets.bottom, 21),
-				paddingHorizontal: 21,
-				paddingTop: 12,
 			}}
 			pointerEvents="box-none"
 		>
-			<View
-				style={{
-					height: 62,
-					borderRadius: 36,
-					backgroundColor: "#FFFFFF",
-					borderWidth: 1,
-					borderColor: "#E7E5E4",
-					flexDirection: "row",
-					gap: 4,
-					padding: 4,
-				}}
-			>
+			<View className="h-[62px] rounded-full bg-bg-elevated border border-border-subtle flex-row gap-1 p-1">
 				{state.routes.map((route, index) => {
 					const isActive = state.index === index;
 					const config = TAB_CONFIG[index];
@@ -60,24 +44,17 @@ export function PillTabBar({ state, navigation }: BottomTabBarProps) {
 									navigation.navigate(route.name);
 								}
 							}}
+							className="flex-1 items-center justify-center rounded-full gap-1"
 							style={{
-								flex: 1,
-								alignItems: "center",
-								justifyContent: "center",
-								borderRadius: 26,
 								backgroundColor: isActive ? "#EA580C" : "transparent",
-								gap: 4,
 							}}
 						>
 							<Feather name={config.icon} size={18} color={isActive ? "#FFFFFF" : "#A8A29E"} />
 							<Text
+								className="font-dm-sans text-2xs uppercase tracking-[0.5px]"
 								style={{
-									fontFamily: "DM Sans",
-									fontSize: 10,
 									fontWeight: isActive ? "600" : "500",
-									letterSpacing: 0.5,
 									color: isActive ? "#FFFFFF" : "#A8A29E",
-									textTransform: "uppercase",
 								}}
 							>
 								{config.label}

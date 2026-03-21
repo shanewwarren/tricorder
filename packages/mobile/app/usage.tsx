@@ -13,11 +13,8 @@ export default function UsageScreen() {
 
 	return (
 		<View
-			style={{
-				flex: 1,
-				backgroundColor: "#FAFAF9",
-				paddingTop: insets.top,
-			}}
+			className="flex-1 bg-page"
+			style={{ paddingTop: insets.top }}
 		>
 			<ScrollView
 				contentContainerStyle={{
@@ -27,39 +24,24 @@ export default function UsageScreen() {
 				showsVerticalScrollIndicator={false}
 			>
 				{/* Header */}
-				<View
-					style={{
-						flexDirection: "row",
-						alignItems: "center",
-						paddingTop: 16,
-						paddingBottom: 20,
-						gap: 12,
-					}}
-				>
+				<View className="flex-row items-center pt-4 pb-5 gap-3">
 					<Pressable onPress={() => router.back()}>
 						<Feather name="arrow-left" size={24} color="#1C1917" />
 					</Pressable>
-					<Text
-						style={{
-							fontFamily: "DM Sans",
-							fontSize: 28,
-							fontWeight: "700",
-							color: "#1C1917",
-						}}
-					>
+					<Text className="font-dm-sans text-3xl font-bold text-primary">
 						Usage
 					</Text>
 				</View>
 
 				{/* Usage Cards */}
 				{!usage?.available ? (
-					<View style={{ paddingTop: 40, alignItems: "center" }}>
-						<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#A8A29E" }}>
+					<View className="pt-10 items-center">
+						<Text className="font-dm-sans text-md text-tertiary">
 							{isLoading ? "Loading usage..." : "Usage data unavailable"}
 						</Text>
 					</View>
 				) : (
-					<View style={{ gap: 16 }}>
+					<View className="gap-4">
 						{usage.tiers.map((tier) => (
 							<UsageCard
 								key={tier.label}

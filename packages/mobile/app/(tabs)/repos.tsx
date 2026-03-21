@@ -13,69 +13,28 @@ function RepoCard({ repo }: { repo: { name: string; path: string; defaultBranch:
 			onPress={() => {
 				router.push(`/new-session?repo=${encodeURIComponent(repo.name)}&path=${encodeURIComponent(repo.path)}&branch=${encodeURIComponent(repo.defaultBranch)}` as any);
 			}}
+			className="bg-card rounded-2xl p-4 px-[18px]"
 			style={({ pressed }) => ({
-				backgroundColor: "#F1F1F1",
-				borderRadius: 16,
-				padding: 16,
-				paddingHorizontal: 18,
 				opacity: pressed ? 0.8 : 1,
 			})}
 		>
-			<View
-				style={{
-					flexDirection: "row",
-					alignItems: "center",
-					justifyContent: "space-between",
-				}}
-			>
-				<View style={{ flex: 1 }}>
-					<View
-						style={{
-							flexDirection: "row",
-							alignItems: "center",
-							gap: 8,
-							marginBottom: 6,
-						}}
-					>
+			<View className="flex-row items-center justify-between">
+				<View className="flex-1">
+					<View className="flex-row items-center gap-2 mb-1.5">
 						<Feather name="folder" size={16} color="#EA580C" />
-						<Text
-							style={{
-								fontFamily: "DM Sans",
-								fontSize: 15,
-								fontWeight: "600",
-								color: "#1C1917",
-							}}
-						>
+						<Text className="font-dm-sans text-lg font-semibold text-primary">
 							{repo.name}
 						</Text>
 					</View>
-					<View
-						style={{
-							flexDirection: "row",
-							alignItems: "center",
-							gap: 10,
-						}}
-					>
-						<View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+					<View className="flex-row items-center gap-[10px]">
+						<View className="flex-row items-center gap-1">
 							<Feather name="git-branch" size={12} color="#78716C" />
-							<Text
-								style={{
-									fontFamily: "JetBrains Mono",
-									fontSize: 12,
-									color: "#78716C",
-								}}
-							>
+							<Text className="font-jetbrains text-sm text-secondary">
 								{repo.defaultBranch}
 							</Text>
 						</View>
-						<Text style={{ fontSize: 12, color: "#A8A29E" }}>·</Text>
-						<Text
-							style={{
-								fontFamily: "DM Sans",
-								fontSize: 12,
-								color: "#A8A29E",
-							}}
-						>
+						<Text className="text-sm text-tertiary">·</Text>
+						<Text className="font-dm-sans text-sm text-tertiary">
 							{repo.lastCommitDate ?? "No commits"}
 						</Text>
 					</View>
@@ -92,28 +51,12 @@ export default function ReposScreen() {
 
 	return (
 		<View
-			style={{
-				flex: 1,
-				backgroundColor: "#FAFAF9",
-				paddingTop: insets.top,
-			}}
+			className="flex-1 bg-page"
+			style={{ paddingTop: insets.top }}
 		>
 			{/* Header */}
-			<View
-				style={{
-					paddingHorizontal: 21,
-					paddingTop: 16,
-					paddingBottom: 12,
-				}}
-			>
-				<Text
-					style={{
-						fontFamily: "DM Sans",
-						fontSize: 32,
-						fontWeight: "700",
-						color: "#1C1917",
-					}}
-				>
+			<View className="px-[21px] pt-4 pb-3">
+				<Text className="font-dm-sans text-4xl font-bold text-primary">
 					Repos
 				</Text>
 			</View>
@@ -125,8 +68,8 @@ export default function ReposScreen() {
 				contentContainerStyle={{ paddingHorizontal: 21, paddingBottom: 100, gap: 12 }}
 				showsVerticalScrollIndicator={false}
 				ListEmptyComponent={
-					<View style={{ paddingTop: 40, alignItems: "center" }}>
-						<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#A8A29E" }}>
+					<View className="pt-10 items-center">
+						<Text className="font-dm-sans text-md text-tertiary">
 							{isLoading ? "Loading repos..." : "No repos found"}
 						</Text>
 					</View>

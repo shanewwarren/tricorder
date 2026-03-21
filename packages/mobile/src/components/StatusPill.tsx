@@ -21,24 +21,12 @@ export function StatusPill({ status }: StatusPillProps) {
 
 	return (
 		<View
-			style={{
-				backgroundColor: `${color}20`,
-				borderRadius: 6,
-				paddingHorizontal: 8,
-				paddingVertical: 4,
-				alignItems: "center",
-				justifyContent: "center",
-			}}
+			className="rounded-sm px-2 py-1 items-center justify-center"
+			style={{ backgroundColor: `${color}20` }}
 		>
 			<Text
-				style={{
-					fontFamily: "JetBrains Mono",
-					fontSize: 10,
-					fontWeight: "700",
-					letterSpacing: 0.5,
-					color,
-					textTransform: "uppercase",
-				}}
+				className="font-jetbrains text-2xs font-bold uppercase tracking-wide"
+				style={{ color }}
 			>
 				{status}
 			</Text>

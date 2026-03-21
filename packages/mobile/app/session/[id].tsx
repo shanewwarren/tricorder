@@ -132,8 +132,8 @@ export default function SessionScreen() {
 
 	if (!session) {
 		return (
-			<View style={{ flex: 1, backgroundColor: "#FAFAF9", justifyContent: "center", alignItems: "center" }}>
-				<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#A8A29E" }}>Loading session...</Text>
+			<View className="flex-1 bg-page justify-center items-center">
+				<Text className="font-dm-sans text-md text-tertiary">Loading session...</Text>
 			</View>
 		);
 	}
@@ -161,43 +161,28 @@ export default function SessionScreen() {
 
 	return (
 		<KeyboardAvoidingView
-			style={{ flex: 1, backgroundColor: "#FAFAF9" }}
+			className="flex-1 bg-page"
 			behavior={Platform.OS === "ios" ? "padding" : undefined}
 		>
 			{/* ── Header ──────────────────────────────────────────────── */}
 			<View
+				className="bg-page border-b"
 				style={{
 					paddingTop: insets.top,
-					backgroundColor: "#FAFAF9",
-					borderBottomWidth: 1,
 					borderBottomColor: "rgba(0,0,0,0.06)",
 				}}
 			>
 				{/* Row 1: Back + Title + Elapsed */}
-				<View
-					style={{
-						flexDirection: "row",
-						alignItems: "center",
-						paddingHorizontal: 16,
-						paddingTop: 8,
-						paddingBottom: 6,
-					}}
-				>
-					<Pressable onPress={() => router.back()} hitSlop={12} style={{ marginRight: 8 }}>
+				<View className="flex-row items-center px-4 pt-2 pb-1.5">
+					<Pressable onPress={() => router.back()} hitSlop={12} className="mr-2">
 						<Feather name="chevron-left" size={24} color="#292524" />
 					</Pressable>
 					<Pressable
 						onPress={() => session.initialPrompt && setShowPrompt(!showPrompt)}
-						style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 4 }}
+						className="flex-1 flex-row items-center gap-1"
 					>
 						<Text
-							style={{
-								fontFamily: "DM Sans",
-								fontSize: 16,
-								fontWeight: "700",
-								color: "#292524",
-								flex: 1,
-							}}
+							className="font-dm-sans text-xl font-bold text-dark flex-1"
 							numberOfLines={showPrompt ? undefined : 1}
 						>
 							{session.name}
@@ -206,35 +191,14 @@ export default function SessionScreen() {
 							<Feather name={showPrompt ? "chevron-up" : "chevron-down"} size={16} color="#A8A29E" />
 						)}
 					</Pressable>
-					<Text
-						style={{
-							fontFamily: "JetBrains Mono",
-							fontSize: 14,
-							fontWeight: "700",
-							color: "#292524",
-						}}
-					>
+					<Text className="font-jetbrains text-md font-bold text-dark">
 						{formatElapsed(elapsedSeconds)}
 					</Text>
 				</View>
 
 				{/* Row 2: Repo + Mode + (Error pill) */}
-				<View
-					style={{
-						flexDirection: "row",
-						alignItems: "center",
-						paddingHorizontal: 48,
-						gap: 8,
-						paddingBottom: 10,
-					}}
-				>
-					<Text
-						style={{
-							fontFamily: "JetBrains Mono",
-							fontSize: 12,
-							color: "#78716C",
-						}}
-					>
+				<View className="flex-row items-center px-12 gap-2 pb-[10px]">
+					<Text className="font-jetbrains text-sm text-secondary">
 						{session.repoName}
 					</Text>
 					<ModeBadge mode={session.mode} />
@@ -243,9 +207,9 @@ export default function SessionScreen() {
 
 				{/* Expanded prompt */}
 				{showPrompt && session.initialPrompt && (
-					<View style={{ paddingHorizontal: 16, paddingBottom: 10 }}>
-						<View style={{ backgroundColor: "#F1F1F1", borderRadius: 10, padding: 12 }}>
-							<Text style={{ fontFamily: "DM Sans", fontSize: 13, color: "#292524", lineHeight: 18 }}>
+					<View className="px-4 pb-[10px]">
+						<View className="bg-card rounded-md p-3">
+							<Text className="font-dm-sans text-base text-dark leading-[18px]">
 								{session.initialPrompt}
 							</Text>
 						</View>
@@ -254,37 +218,17 @@ export default function SessionScreen() {
 
 				{/* Row 3: Action buttons */}
 				{(isActive || isError) && (
-					<View
-						style={{
-							flexDirection: "row",
-							paddingHorizontal: 16,
-							gap: 10,
-							paddingBottom: 12,
-						}}
-					>
+					<View className="flex-row px-4 gap-[10px] pb-3">
 						{isError ? (
 							<Pressable
 								onPress={() => sendMessage.mutate({ id: session.id, message: "Continue from where you left off." })}
+								className="flex-1 h-9 rounded flex-row items-center justify-center gap-1.5"
 								style={({ pressed }) => ({
-									flex: 1,
-									height: 36,
 									backgroundColor: pressed ? "#0F9380" : "#14B8A6",
-									borderRadius: 8,
-									flexDirection: "row",
-									alignItems: "center",
-									justifyContent: "center",
-									gap: 6,
 								})}
 							>
 								<Feather name="refresh-cw" size={14} color="#FFFFFF" />
-								<Text
-									style={{
-										fontFamily: "DM Sans",
-										fontSize: 13,
-										fontWeight: "600",
-										color: "#FFFFFF",
-									}}
-								>
+								<Text className="font-dm-sans text-base font-semibold text-white">
 									Retry
 								</Text>
 							</Pressable>
@@ -292,51 +236,25 @@ export default function SessionScreen() {
 							<>
 								<Pressable
 									onPress={() => pauseMutation.mutate({ id: session.id })}
+									className="flex-1 h-9 rounded flex-row items-center justify-center gap-1.5"
 									style={({ pressed }) => ({
-										flex: 1,
-										height: 36,
 										backgroundColor: pressed ? "rgba(217, 119, 6, 0.2)" : "rgba(217, 119, 6, 0.12)",
-										borderRadius: 8,
-										flexDirection: "row",
-										alignItems: "center",
-										justifyContent: "center",
-										gap: 6,
 									})}
 								>
 									<Feather name="pause" size={14} color="#D97706" />
-									<Text
-										style={{
-											fontFamily: "DM Sans",
-											fontSize: 13,
-											fontWeight: "600",
-											color: "#D97706",
-										}}
-									>
+									<Text className="font-dm-sans text-base font-semibold text-status-waiting">
 										Pause
 									</Text>
 								</Pressable>
 								<Pressable
 									onPress={() => cancelMutation.mutate({ id: session.id })}
+									className="flex-1 h-9 rounded flex-row items-center justify-center gap-1.5"
 									style={({ pressed }) => ({
-										flex: 1,
-										height: 36,
 										backgroundColor: pressed ? "rgba(220, 38, 38, 0.2)" : "rgba(220, 38, 38, 0.12)",
-										borderRadius: 8,
-										flexDirection: "row",
-										alignItems: "center",
-										justifyContent: "center",
-										gap: 6,
 									})}
 								>
 									<Feather name="x" size={14} color="#DC2626" />
-									<Text
-										style={{
-											fontFamily: "DM Sans",
-											fontSize: 13,
-											fontWeight: "600",
-											color: "#DC2626",
-										}}
-									>
+									<Text className="font-dm-sans text-base font-semibold text-status-error">
 										Cancel
 									</Text>
 								</Pressable>
@@ -349,7 +267,7 @@ export default function SessionScreen() {
 			{/* ── Message Stream ──────────────────────────────────────── */}
 			<ScrollView
 				ref={scrollRef}
-				style={{ flex: 1 }}
+				className="flex-1"
 				contentContainerStyle={{
 					padding: 16,
 					gap: 12,
@@ -415,49 +333,28 @@ export default function SessionScreen() {
 
 			{/* ── Bottom Section ──────────────────────────────────────── */}
 			<View
+				className="border-t"
 				style={{
-					borderTopWidth: 1,
 					borderTopColor: "rgba(0,0,0,0.06)",
 					paddingBottom: insets.bottom || 16,
 				}}
 			>
 				{showInput ? (
-					<View
-						style={{
-							flexDirection: "row",
-							alignItems: "center",
-							paddingHorizontal: 16,
-							paddingTop: 12,
-							gap: 10,
-						}}
-					>
+					<View className="flex-row items-center px-4 pt-3 gap-[10px]">
 						<TextInput
 							value={inputText}
 							onChangeText={setInputText}
 							placeholder="Send a message..."
 							placeholderTextColor="#A8A29E"
-							style={{
-								flex: 1,
-								height: 40,
-								backgroundColor: "#F1F1F1",
-								borderRadius: 20,
-								paddingHorizontal: 16,
-								fontFamily: "DM Sans",
-								fontSize: 14,
-								color: "#292524",
-							}}
+							className="flex-1 h-10 bg-card rounded-full px-4 font-dm-sans text-md text-dark"
 							returnKeyType="send"
 							onSubmitEditing={handleSend}
 						/>
 						<Pressable
 							onPress={handleSend}
+							className="w-10 h-10 rounded-full items-center justify-center"
 							style={({ pressed }) => ({
-								width: 40,
-								height: 40,
-								borderRadius: 20,
 								backgroundColor: pressed ? "#D35407" : "#EA580C",
-								alignItems: "center",
-								justifyContent: "center",
 							})}
 						>
 							<Feather name="send" size={18} color="#FFFFFF" />

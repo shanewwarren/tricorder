@@ -9,34 +9,21 @@ interface SegmentControlProps {
 
 export function SegmentControl({ segments, activeIndex, onPress }: SegmentControlProps) {
 	return (
-		<View
-			style={{
-				backgroundColor: "#F1F1F1",
-				height: 38,
-				borderRadius: 12,
-				gap: 4,
-				padding: 4,
-				flexDirection: "row",
-			}}
-		>
+		<View className="bg-bg-card h-[38px] rounded-lg gap-1 p-1 flex-row">
 			{segments.map((label, index) => {
 				const isActive = index === activeIndex;
 				return (
 					<Pressable
 						key={label}
 						onPress={() => onPress(index)}
+						className="flex-1 rounded items-center justify-center"
 						style={{
-							flex: 1,
-							borderRadius: 8,
-							alignItems: "center",
-							justifyContent: "center",
 							backgroundColor: isActive ? "#EA580C" : "transparent",
 						}}
 					>
 						<Text
+							className="font-dm-sans text-sm"
 							style={{
-								fontFamily: "DM Sans",
-								fontSize: 12,
 								fontWeight: isActive ? "600" : "500",
 								color: isActive ? "#FFFFFF" : "#A8A29E",
 							}}

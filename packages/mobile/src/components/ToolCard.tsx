@@ -26,39 +26,17 @@ export function ToolCard({ type, title, detail, diff, result }: ToolCardProps) {
 
 	return (
 		<View
-			style={{
-				backgroundColor: "#F1F1F1",
-				borderRadius: 10,
-				padding: 14,
-				gap: isCompact ? 0 : 10,
-			}}
+			className="bg-bg-card rounded-md p-[14px]"
+			style={{ gap: isCompact ? 0 : 10 }}
 		>
 			{/* Header row */}
-			<Pressable
-				style={{
-					flexDirection: "row",
-					alignItems: "center",
-					gap: 8,
-				}}
-			>
+			<Pressable className="flex-row items-center gap-2">
 				<Feather name={icon} size={16} color="#78716C" />
-				<Text
-					style={{
-						fontFamily: "DM Sans",
-						fontSize: 12,
-						fontWeight: "600",
-						color: "#292524",
-					}}
-				>
+				<Text className="font-dm-sans text-sm font-semibold text-text-dark">
 					{title}
 				</Text>
 				<Text
-					style={{
-						fontFamily: "JetBrains Mono",
-						fontSize: 11,
-						color: "#78716C",
-						flex: 1,
-					}}
+					className="font-jetbrains text-xs text-text-secondary flex-1"
 					numberOfLines={1}
 				>
 					{detail}
@@ -72,22 +50,16 @@ export function ToolCard({ type, title, detail, diff, result }: ToolCardProps) {
 			{/* Result section for Bash */}
 			{type === "Bash" && result && (
 				<View
+					className="rounded-sm p-2 flex-row items-center gap-[6px]"
 					style={{
 						backgroundColor: result.success ? "rgba(22, 163, 74, 0.08)" : "rgba(220, 38, 38, 0.08)",
-						borderRadius: 6,
-						padding: 8,
-						flexDirection: "row",
-						alignItems: "center",
-						gap: 6,
 					}}
 				>
 					<Feather name={result.success ? "check" : "x"} size={14} color={result.success ? "#16A34A" : "#DC2626"} />
 					<Text
+						className="font-jetbrains text-xs flex-1"
 						style={{
-							fontFamily: "JetBrains Mono",
-							fontSize: 11,
 							color: result.success ? "#16A34A" : "#DC2626",
-							flex: 1,
 						}}
 						numberOfLines={3}
 					>

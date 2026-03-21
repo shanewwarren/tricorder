@@ -10,24 +10,10 @@ interface UserBubbleProps {
 
 export function UserBubble({ content }: UserBubbleProps) {
 	return (
-		<View
-			style={{
-				backgroundColor: "#F1F1F1",
-				borderRadius: 14,
-				padding: 16,
-				gap: 8,
-			}}
-		>
-			<View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+		<View className="bg-card rounded-xl p-4 gap-2">
+			<View className="flex-row items-center gap-1.5">
 				<Feather name="user" size={16} color="#78716C" />
-				<Text
-					style={{
-						fontFamily: "DM Sans",
-						fontSize: 12,
-						fontWeight: "600",
-						color: "#78716C",
-					}}
-				>
+				<Text className="font-dm-sans text-sm font-semibold text-secondary">
 					You
 				</Text>
 			</View>

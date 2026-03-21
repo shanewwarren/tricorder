@@ -25,33 +25,15 @@ export function SessionCard({ session }: SessionCardProps) {
 	return (
 		<Pressable
 			onPress={() => router.push(`/session/${session.id}` as any)}
+			className="bg-bg-card rounded-2xl p-4 px-[18px] gap-[10px]"
 			style={({ pressed }) => ({
-				backgroundColor: "#F1F1F1",
-				borderRadius: 16,
-				padding: 16,
-				paddingHorizontal: 18,
-				gap: 10,
 				opacity: pressed ? 0.8 : 1,
 			})}
 		>
 			{/* Row 1: Title + Status */}
-			<View
-				style={{
-					flexDirection: "row",
-					justifyContent: "space-between",
-					alignItems: "center",
-					width: "100%",
-				}}
-			>
+			<View className="flex-row justify-between items-center w-full">
 				<Text
-					style={{
-						fontFamily: "DM Sans",
-						fontSize: 15,
-						fontWeight: "600",
-						color: "#292524",
-						flex: 1,
-						marginRight: 8,
-					}}
+					className="font-dm-sans text-lg font-semibold text-text-dark flex-1 mr-2"
 					numberOfLines={1}
 				>
 					{session.name}
@@ -60,45 +42,18 @@ export function SessionCard({ session }: SessionCardProps) {
 			</View>
 
 			{/* Row 2: Repo + Mode */}
-			<View
-				style={{
-					flexDirection: "row",
-					alignItems: "center",
-					gap: 10,
-					width: "100%",
-				}}
-			>
-				<Text
-					style={{
-						fontFamily: "JetBrains Mono",
-						fontSize: 12,
-						color: "#78716C",
-					}}
-				>
+			<View className="flex-row items-center gap-[10px] w-full">
+				<Text className="font-jetbrains text-sm text-text-secondary">
 					{session.repoName}
 				</Text>
-				<Text
-					style={{
-						fontFamily: "DM Sans",
-						fontSize: 12,
-						color: "#A8A29E",
-					}}
-				>
+				<Text className="font-dm-sans text-sm text-text-tertiary">
 					·
 				</Text>
 				<ModeBadge mode={session.mode} />
 			</View>
 
 			{/* Row 3: Activity description */}
-			<Text
-				style={{
-					fontFamily: "DM Sans",
-					fontSize: 13,
-					color: "#78716C",
-					lineHeight: 13 * 1.4,
-					width: "100%",
-				}}
-			>
+			<Text className="font-dm-sans text-base text-text-secondary leading-[18.2px] w-full">
 				{session.lastActivity}
 			</Text>
 		</Pressable>

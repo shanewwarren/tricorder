@@ -9,18 +9,7 @@ type Mode = "autonomous" | "interactive";
 
 function SectionHeader({ title }: { title: string }) {
 	return (
-		<Text
-			style={{
-				fontFamily: "JetBrains Mono",
-				fontSize: 11,
-				fontWeight: "700",
-				color: "#A8A29E",
-				letterSpacing: 1.5,
-				textTransform: "uppercase",
-				marginTop: 24,
-				marginBottom: 10,
-			}}
-		>
+		<Text className="font-jetbrains text-xs font-bold text-tertiary tracking-[1.5px] uppercase mt-6 mb-[10px]">
 			{title}
 		</Text>
 	);
@@ -36,34 +25,13 @@ function SettingRow({
 	rightElement?: React.ReactNode;
 }) {
 	return (
-		<View
-			style={{
-				flexDirection: "row",
-				alignItems: "center",
-				justifyContent: "space-between",
-				paddingVertical: 14,
-				borderBottomWidth: 1,
-				borderBottomColor: "#F1F1F1",
-			}}
-		>
-			<Text
-				style={{
-					fontFamily: "DM Sans",
-					fontSize: 14,
-					color: "#1C1917",
-				}}
-			>
+		<View className="flex-row items-center justify-between py-3.5 border-b border-b-card">
+			<Text className="font-dm-sans text-md text-primary">
 				{label}
 			</Text>
 			{rightElement ??
 				(value ? (
-					<Text
-						style={{
-							fontFamily: "JetBrains Mono",
-							fontSize: 14,
-							color: "#1C1917",
-						}}
-					>
+					<Text className="font-jetbrains text-md text-primary">
 						{value}
 					</Text>
 				) : null)}
@@ -91,11 +59,8 @@ export default function SettingsScreen() {
 
 	return (
 		<View
-			style={{
-				flex: 1,
-				backgroundColor: "#FAFAF9",
-				paddingTop: insets.top,
-			}}
+			className="flex-1 bg-page"
+			style={{ paddingTop: insets.top }}
 		>
 			<ScrollView
 				contentContainerStyle={{
@@ -105,79 +70,30 @@ export default function SettingsScreen() {
 				showsVerticalScrollIndicator={false}
 			>
 				{/* Header */}
-				<View
-					style={{
-						flexDirection: "row",
-						alignItems: "center",
-						paddingTop: 16,
-						paddingBottom: 12,
-						gap: 12,
-					}}
-				>
-					<Text
-						style={{
-							fontFamily: "DM Sans",
-							fontSize: 32,
-							fontWeight: "700",
-							color: "#1C1917",
-						}}
-					>
+				<View className="flex-row items-center pt-4 pb-3 gap-3">
+					<Text className="font-dm-sans text-4xl font-bold text-primary">
 						Settings
 					</Text>
 				</View>
 
 				{/* First-run welcome banner */}
 				{!isConnected && (
-					<View
-						style={{
-							backgroundColor: "#EA580C",
-							borderRadius: 16,
-							padding: 20,
-							marginBottom: 8,
-						}}
-					>
-						<Text
-							style={{
-								fontFamily: "DM Sans",
-								fontSize: 18,
-								fontWeight: "700",
-								color: "#FFFFFF",
-								marginBottom: 4,
-							}}
-						>
+					<View className="bg-primary rounded-2xl p-5 mb-2">
+						<Text className="font-dm-sans text-2xl font-bold text-white mb-1">
 							Welcome to Tricorder
 						</Text>
 						<Text
-							style={{
-								fontFamily: "DM Sans",
-								fontSize: 14,
-								color: "rgba(255,255,255,0.85)",
-								marginBottom: 14,
-							}}
+							className="font-dm-sans text-md mb-3.5"
+							style={{ color: "rgba(255,255,255,0.85)" }}
 						>
 							Connect to your server to start managing Claude Code sessions remotely.
 						</Text>
 						<Pressable
 							onPress={() => setEditingConnection(true)}
-							style={{
-								backgroundColor: "#FFFFFF",
-								borderRadius: 12,
-								paddingVertical: 10,
-								alignItems: "center",
-								flexDirection: "row",
-								justifyContent: "center",
-								gap: 6,
-							}}
+							className="bg-elevated rounded-lg py-[10px] items-center flex-row justify-center gap-1.5"
 						>
 							<Feather name="link" size={16} color="#EA580C" />
-							<Text
-								style={{
-									fontFamily: "DM Sans",
-									fontSize: 14,
-									fontWeight: "700",
-									color: "#EA580C",
-								}}
-							>
+							<Text className="font-dm-sans text-md font-bold text-primary">
 								Connect Server
 							</Text>
 						</Pressable>
@@ -187,10 +103,9 @@ export default function SettingsScreen() {
 				{/* SERVER CONNECTION */}
 				<SectionHeader title="Server Connection" />
 				<View
+					className="rounded-lg px-3.5"
 					style={{
 						backgroundColor: isConnected ? "#F1F1F1" : "#FFFFFF",
-						borderRadius: 12,
-						paddingHorizontal: 14,
 						borderWidth: isConnected ? 0 : 1,
 						borderColor: "#E7E5E4",
 					}}
@@ -200,13 +115,7 @@ export default function SettingsScreen() {
 						value={isConnected ? config?.host ?? "" : undefined}
 						rightElement={
 							!isConnected ? (
-								<Text
-									style={{
-										fontFamily: "JetBrains Mono",
-										fontSize: 14,
-										color: "#A8A29E",
-									}}
-								>
+								<Text className="font-jetbrains text-md text-tertiary">
 									Enter IP address
 								</Text>
 							) : undefined
@@ -217,13 +126,7 @@ export default function SettingsScreen() {
 						value={isConnected ? String(config?.port ?? 3141) : undefined}
 						rightElement={
 							!isConnected ? (
-								<Text
-									style={{
-										fontFamily: "JetBrains Mono",
-										fontSize: 14,
-										color: "#A8A29E",
-									}}
-								>
+								<Text className="font-jetbrains text-md text-tertiary">
 									Enter port
 								</Text>
 							) : undefined
@@ -232,20 +135,16 @@ export default function SettingsScreen() {
 					<SettingRow
 						label="Status"
 						rightElement={
-							<View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+							<View className="flex-row items-center gap-1.5">
 								<View
+									className="w-2 h-2 rounded-full"
 									style={{
-										width: 8,
-										height: 8,
-										borderRadius: 4,
 										backgroundColor: isConnected ? "#16A34A" : "#DC2626",
 									}}
 								/>
 								<Text
+									className="font-dm-sans text-md font-semibold"
 									style={{
-										fontFamily: "DM Sans",
-										fontSize: 14,
-										fontWeight: "600",
 										color: isConnected ? "#16A34A" : "#DC2626",
 									}}
 								>
@@ -257,16 +156,13 @@ export default function SettingsScreen() {
 				</View>
 
 				{(!isConnected || editingConnection) && (
-					<View style={{ marginTop: 12, gap: 10 }}>
+					<View className="mt-3 gap-[10px]">
 						<TextInput
 							value={ipInput}
 							onChangeText={setIpInput}
 							placeholder="100.x.x.x"
 							placeholderTextColor="#A8A29E"
-							style={{
-								borderWidth: 1, borderColor: "#D6D3D1", borderRadius: 12,
-								padding: 14, fontFamily: "JetBrains Mono", fontSize: 14, color: "#1C1917",
-							}}
+							className="border border-border-default rounded-lg p-3.5 font-jetbrains text-md text-primary"
 						/>
 						<TextInput
 							value={portInput}
@@ -274,10 +170,7 @@ export default function SettingsScreen() {
 							placeholder="3141"
 							placeholderTextColor="#A8A29E"
 							keyboardType="number-pad"
-							style={{
-								borderWidth: 1, borderColor: "#D6D3D1", borderRadius: 12,
-								padding: 14, fontFamily: "JetBrains Mono", fontSize: 14, color: "#1C1917",
-							}}
+							className="border border-border-default rounded-lg p-3.5 font-jetbrains text-md text-primary"
 						/>
 						<Pressable
 							onPress={() => {
@@ -286,12 +179,9 @@ export default function SettingsScreen() {
 								reconnect(url);
 								setEditingConnection(false);
 							}}
-							style={{
-								backgroundColor: "#EA580C", borderRadius: 12, paddingVertical: 12,
-								alignItems: "center",
-							}}
+							className="bg-primary rounded-lg py-3 items-center"
 						>
-							<Text style={{ fontFamily: "DM Sans", fontSize: 14, fontWeight: "700", color: "#FFFFFF" }}>
+							<Text className="font-dm-sans text-md font-bold text-white">
 								Connect
 							</Text>
 						</Pressable>
@@ -299,8 +189,8 @@ export default function SettingsScreen() {
 				)}
 
 				{isConnected && !editingConnection && (
-					<Pressable onPress={() => setEditingConnection(true)} style={{ marginTop: 8 }}>
-						<Text style={{ fontFamily: "DM Sans", fontSize: 13, color: "#EA580C" }}>
+					<Pressable onPress={() => setEditingConnection(true)} className="mt-2">
+						<Text className="font-dm-sans text-base text-primary">
 							Change server
 						</Text>
 					</Pressable>
@@ -308,23 +198,10 @@ export default function SettingsScreen() {
 
 				{/* SCAN DIRECTORY */}
 				<SectionHeader title="Scan Directory" />
-				<Pressable
-					style={{
-						backgroundColor: "#F1F1F1",
-						borderRadius: 12,
-						paddingHorizontal: 14,
-						paddingVertical: 14,
-						flexDirection: "row",
-						alignItems: "center",
-						justifyContent: "space-between",
-					}}
-				>
+				<Pressable className="bg-card rounded-lg px-3.5 py-3.5 flex-row items-center justify-between">
 					<Text
-						style={{
-							fontFamily: "JetBrains Mono",
-							fontSize: 14,
-							color: isConnected ? "#1C1917" : "#A8A29E",
-						}}
+						className="font-jetbrains text-md"
+						style={{ color: isConnected ? "#1C1917" : "#A8A29E" }}
 					>
 						{isConnected ? config?.scanDirectory ?? "" : "Select a directory..."}
 					</Text>
@@ -333,26 +210,18 @@ export default function SettingsScreen() {
 
 				{/* DEFAULT MODE */}
 				<SectionHeader title="Default Mode" />
-				<View style={{ flexDirection: "row", gap: 10 }}>
+				<View className="flex-row gap-[10px]">
 					<Pressable
 						onPress={() => setSelectedMode("autonomous")}
+						className="flex-1 rounded-md py-[10px] flex-row items-center justify-center gap-1.5"
 						style={{
-							flex: 1,
 							backgroundColor: selectedMode === "autonomous" ? "#1C1917" : "#F1F1F1",
-							borderRadius: 10,
-							paddingVertical: 10,
-							flexDirection: "row",
-							alignItems: "center",
-							justifyContent: "center",
-							gap: 6,
 						}}
 					>
 						<Feather name="zap" size={14} color={selectedMode === "autonomous" ? "#FFFFFF" : "#78716C"} />
 						<Text
+							className="font-dm-sans text-base font-semibold"
 							style={{
-								fontFamily: "DM Sans",
-								fontSize: 13,
-								fontWeight: "600",
 								color: selectedMode === "autonomous" ? "#FFFFFF" : "#1C1917",
 							}}
 						>
@@ -361,23 +230,15 @@ export default function SettingsScreen() {
 					</Pressable>
 					<Pressable
 						onPress={() => setSelectedMode("interactive")}
+						className="flex-1 rounded-md py-[10px] flex-row items-center justify-center gap-1.5"
 						style={{
-							flex: 1,
 							backgroundColor: selectedMode === "interactive" ? "#1C1917" : "#F1F1F1",
-							borderRadius: 10,
-							paddingVertical: 10,
-							flexDirection: "row",
-							alignItems: "center",
-							justifyContent: "center",
-							gap: 6,
 						}}
 					>
 						<Feather name="eye" size={14} color={selectedMode === "interactive" ? "#FFFFFF" : "#78716C"} />
 						<Text
+							className="font-dm-sans text-base font-semibold"
 							style={{
-								fontFamily: "DM Sans",
-								fontSize: 13,
-								fontWeight: "600",
 								color: selectedMode === "interactive" ? "#FFFFFF" : "#1C1917",
 							}}
 						>
@@ -389,31 +250,22 @@ export default function SettingsScreen() {
 				{/* PLUGINS */}
 				<SectionHeader title="Plugins" />
 				{plugins.length > 0 ? (
-					<View
-						style={{
-							backgroundColor: "#F1F1F1",
-							borderRadius: 12,
-							paddingHorizontal: 14,
-						}}
-					>
+					<View className="bg-card rounded-lg px-3.5">
 						{plugins.map((plugin: string, i: number, arr: string[]) => (
 							<View
 								key={plugin}
+								className="flex-row items-center py-3.5 gap-[10px]"
 								style={{
-									flexDirection: "row",
-									alignItems: "center",
-									paddingVertical: 14,
 									borderBottomWidth: i < arr.length - 1 ? 1 : 0,
 									borderBottomColor: "#E7E5E4",
-									gap: 10,
 								}}
 							>
 								<Feather name="package" size={16} color="#1C1917" />
-								<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#1C1917", flex: 1 }}>
+								<Text className="font-dm-sans text-md text-primary flex-1">
 									{plugin}
 								</Text>
-								<View style={{ backgroundColor: "rgba(20, 184, 166, 0.12)", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
-									<Text style={{ fontFamily: "DM Sans", fontSize: 11, fontWeight: "600", color: "#14B8A6" }}>
+								<View className="bg-teal/[0.12] rounded-sm px-2 py-[3px]">
+									<Text className="font-dm-sans text-xs font-semibold text-teal">
 										Enabled
 									</Text>
 								</View>
@@ -421,22 +273,9 @@ export default function SettingsScreen() {
 						))}
 					</View>
 				) : (
-					<View
-						style={{
-							backgroundColor: "#F1F1F1",
-							borderRadius: 12,
-							padding: 20,
-							alignItems: "center",
-						}}
-					>
+					<View className="bg-card rounded-lg p-5 items-center">
 						<Feather name="package" size={20} color="#A8A29E" style={{ marginBottom: 6 }} />
-						<Text
-							style={{
-								fontFamily: "DM Sans",
-								fontSize: 13,
-								color: "#A8A29E",
-							}}
-						>
+						<Text className="font-dm-sans text-base text-tertiary">
 							No plugins configured
 						</Text>
 					</View>
@@ -447,36 +286,27 @@ export default function SettingsScreen() {
 					<>
 						<SectionHeader title="MCP Servers" />
 						{Object.keys(mcpServers).length === 0 ? (
-							<View style={{ backgroundColor: "#F1F1F1", borderRadius: 12, padding: 20, alignItems: "center" }}>
+							<View className="bg-card rounded-lg p-5 items-center">
 								<Feather name="server" size={20} color="#A8A29E" style={{ marginBottom: 6 }} />
-								<Text style={{ fontFamily: "DM Sans", fontSize: 13, color: "#A8A29E" }}>
+								<Text className="font-dm-sans text-base text-tertiary">
 									No MCP servers configured
 								</Text>
 							</View>
 						) : (
-							<View
-								style={{
-									backgroundColor: "#F1F1F1",
-									borderRadius: 12,
-									paddingHorizontal: 14,
-								}}
-							>
+							<View className="bg-card rounded-lg px-3.5">
 								{Object.entries(mcpServers).map(([name, server], i, arr) => (
 									<View
 										key={name}
+										className="flex-row items-center py-3.5 gap-[10px]"
 										style={{
-											flexDirection: "row",
-											alignItems: "center",
-											paddingVertical: 14,
 											borderBottomWidth: i < arr.length - 1 ? 1 : 0,
 											borderBottomColor: "#E7E5E4",
-											gap: 10,
 										}}
 									>
 										<Feather name="server" size={16} color="#1C1917" />
-										<View style={{ flex: 1 }}>
-											<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#1C1917" }}>{name}</Text>
-											<Text style={{ fontFamily: "DM Sans", fontSize: 12, color: "#78716C", marginTop: 2 }}>
+										<View className="flex-1">
+											<Text className="font-dm-sans text-md text-primary">{name}</Text>
+											<Text className="font-dm-sans text-sm text-secondary mt-0.5">
 												{server.command}
 											</Text>
 										</View>

@@ -19,32 +19,13 @@ export function UsageIndicator({ percentage }: UsageIndicatorProps) {
 	return (
 		<Pressable
 			onPress={() => router.push("/usage" as any)}
-			style={{
-				backgroundColor: "#F1F1F1",
-				borderRadius: 14,
-				paddingHorizontal: 10,
-				paddingVertical: 6,
-				flexDirection: "row",
-				alignItems: "center",
-				gap: 6,
-			}}
+			className="bg-card rounded-xl px-2.5 py-1.5 flex-row items-center gap-1.5"
 		>
 			<View
-				style={{
-					width: 8,
-					height: 8,
-					borderRadius: 4,
-					backgroundColor: dotColor,
-				}}
+				className="w-2 h-2 rounded-full"
+				style={{ backgroundColor: dotColor }}
 			/>
-			<Text
-				style={{
-					fontFamily: "JetBrains Mono",
-					fontSize: 12,
-					fontWeight: "700",
-					color: "#292524",
-				}}
-			>
+			<Text className="font-jetbrains text-sm font-bold text-text-dark">
 				{percentage}%
 			</Text>
 		</Pressable>

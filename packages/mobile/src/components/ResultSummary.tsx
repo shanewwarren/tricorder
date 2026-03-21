@@ -11,38 +11,16 @@ interface ResultSummaryProps {
 
 export function ResultSummary({ content, cost }: ResultSummaryProps) {
 	return (
-		<View
-			style={{
-				backgroundColor: "#F1F1F1",
-				borderRadius: 14,
-				borderLeftWidth: 3,
-				borderLeftColor: "#16A34A",
-				padding: 16,
-				gap: 8,
-			}}
-		>
-			<View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+		<View className="bg-card rounded-xl border-l-[3px] border-l-status-running p-4 gap-2">
+			<View className="flex-row items-center gap-1.5">
 				<Feather name="check-circle" size={16} color="#16A34A" />
-				<Text
-					style={{
-						fontFamily: "DM Sans",
-						fontSize: 12,
-						fontWeight: "600",
-						color: "#16A34A",
-					}}
-				>
+				<Text className="font-dm-sans text-sm font-semibold text-status-running">
 					Result
 				</Text>
 			</View>
 			<Markdown style={lightMarkdownStyles}>{content}</Markdown>
 			{cost != null && (
-				<Text
-					style={{
-						fontFamily: "JetBrains Mono",
-						fontSize: 11,
-						color: "#78716C",
-					}}
-				>
+				<Text className="font-jetbrains text-xs text-secondary">
 					${cost.toFixed(4)}
 				</Text>
 			)}

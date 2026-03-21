@@ -23,94 +23,44 @@ export function UsageCard({ label, subtitle, percentage, resetIn, dollarAmount, 
 	const color = getColor(displayPercentage);
 
 	return (
-		<View
-			style={{
-				backgroundColor: "#F1F1F1",
-				borderRadius: 16,
-				padding: 16,
-			}}
-		>
+		<View className="bg-bg-card rounded-2xl p-4">
 			{/* Header */}
-			<View
-				style={{
-					flexDirection: "row",
-					justifyContent: "space-between",
-					alignItems: "center",
-					marginBottom: 8,
-				}}
-			>
-				<Text
-					style={{
-						fontFamily: "DM Sans",
-						fontSize: 16,
-						fontWeight: "600",
-						color: "#1C1917",
-					}}
-				>
+			<View className="flex-row justify-between items-center mb-2">
+				<Text className="font-dm-sans text-xl font-semibold text-text-primary">
 					{label}
 				</Text>
-				<Text
-					style={{
-						fontFamily: "JetBrains Mono",
-						fontSize: 12,
-						color: "#78716C",
-					}}
-				>
+				<Text className="font-jetbrains text-sm text-text-secondary">
 					{subtitle}
 				</Text>
 			</View>
 
 			{/* Big number */}
 			{isDollar ? (
-				<View style={{ flexDirection: "row", alignItems: "baseline", marginBottom: 10 }}>
+				<View className="flex-row items-baseline mb-[10px]">
 					<Text
-						style={{
-							fontFamily: "DM Sans",
-							fontSize: 28,
-							fontWeight: "700",
-							color: color,
-						}}
+						className="font-dm-sans text-3xl font-bold"
+						style={{ color }}
 					>
 						${dollarAmount.toFixed(2)}
 					</Text>
-					<Text
-						style={{
-							fontFamily: "DM Sans",
-							fontSize: 14,
-							color: "#78716C",
-							marginLeft: 4,
-						}}
-					>
+					<Text className="font-dm-sans text-md text-text-secondary ml-1">
 						of ${dollarLimit} limit
 					</Text>
 				</View>
 			) : (
 				<Text
-					style={{
-						fontFamily: "DM Sans",
-						fontSize: 28,
-						fontWeight: "700",
-						color: color,
-						marginBottom: 10,
-					}}
+					className="font-dm-sans text-3xl font-bold mb-[10px]"
+					style={{ color }}
 				>
 					{percentage}%
 				</Text>
 			)}
 
 			{/* Progress bar */}
-			<View
-				style={{
-					height: 4,
-					borderRadius: 2,
-					backgroundColor: "#E7E5E4",
-					marginBottom: 10,
-				}}
-			>
+			<View className="h-1 rounded-full bg-border-subtle mb-[10px]">
 				<View
+					className="h-1 rounded-full"
 					style={{
-						height: 4,
-						borderRadius: 2,
 						backgroundColor: color,
 						width: `${Math.min(displayPercentage, 100)}%`,
 					}}
@@ -119,26 +69,14 @@ export function UsageCard({ label, subtitle, percentage, resetIn, dollarAmount, 
 
 			{/* Footer */}
 			{resetIn ? (
-				<View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+				<View className="flex-row items-center gap-1">
 					<Feather name="clock" size={12} color="#78716C" />
-					<Text
-						style={{
-							fontFamily: "JetBrains Mono",
-							fontSize: 12,
-							color: "#78716C",
-						}}
-					>
+					<Text className="font-jetbrains text-sm text-text-secondary">
 						Resets in {resetIn}
 					</Text>
 				</View>
 			) : isDollar && dollarLimit ? (
-				<Text
-					style={{
-						fontFamily: "JetBrains Mono",
-						fontSize: 12,
-						color: "#78716C",
-					}}
-				>
+				<Text className="font-jetbrains text-sm text-text-secondary">
 					${(dollarLimit - (dollarAmount ?? 0)).toFixed(2)} remaining
 				</Text>
 			) : null}

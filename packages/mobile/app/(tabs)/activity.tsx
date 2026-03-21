@@ -68,47 +68,23 @@ function EventRow({ event }: { event: { id: string; sessionName: string; type: E
 	const config = EVENT_CONFIG[event.type];
 
 	return (
-		<View
-			style={{
-				flexDirection: "row",
-				alignItems: "center",
-				paddingVertical: 12,
-				paddingHorizontal: 21,
-				gap: 12,
-			}}
-		>
+		<View className="flex-row items-center py-3 px-[21px] gap-3">
 			<Feather name={config.icon} size={16} color={config.color} />
-			<View style={{ flex: 1 }}>
+			<View className="flex-1">
 				<Text
-					style={{
-						fontFamily: "DM Sans",
-						fontSize: 14,
-						fontWeight: "600",
-						color: "#1C1917",
-					}}
+					className="font-dm-sans text-md font-semibold text-primary"
 					numberOfLines={1}
 				>
 					{event.sessionName}
 				</Text>
 				<Text
-					style={{
-						fontFamily: "DM Sans",
-						fontSize: 13,
-						color: "#78716C",
-						marginTop: 2,
-					}}
+					className="font-dm-sans text-base text-secondary mt-0.5"
 					numberOfLines={1}
 				>
 					{event.description}
 				</Text>
 			</View>
-			<Text
-				style={{
-					fontFamily: "DM Sans",
-					fontSize: 12,
-					color: "#A8A29E",
-				}}
-			>
+			<Text className="font-dm-sans text-sm text-tertiary">
 				{formatRelativeTime(event.timestamp)}
 			</Text>
 		</View>
@@ -126,28 +102,12 @@ export default function ActivityScreen() {
 
 	return (
 		<View
-			style={{
-				flex: 1,
-				backgroundColor: "#FAFAF9",
-				paddingTop: insets.top,
-			}}
+			className="flex-1 bg-page"
+			style={{ paddingTop: insets.top }}
 		>
 			{/* Header */}
-			<View
-				style={{
-					paddingHorizontal: 21,
-					paddingTop: 16,
-					paddingBottom: 12,
-				}}
-			>
-				<Text
-					style={{
-						fontFamily: "DM Sans",
-						fontSize: 32,
-						fontWeight: "700",
-						color: "#1C1917",
-					}}
-				>
+			<View className="px-[21px] pt-4 pb-3">
+				<Text className="font-dm-sans text-4xl font-bold text-primary">
 					Activity
 				</Text>
 			</View>
@@ -158,17 +118,8 @@ export default function ActivityScreen() {
 				renderItem={({ item }) => {
 					if (typeof item === "string") {
 						return (
-							<View style={{ paddingHorizontal: 21, paddingTop: 16, paddingBottom: 6 }}>
-								<Text
-									style={{
-										fontFamily: "DM Sans",
-										fontSize: 11,
-										fontWeight: "700",
-										color: "#A8A29E",
-										letterSpacing: 1.5,
-										textTransform: "uppercase",
-									}}
-								>
+							<View className="px-[21px] pt-4 pb-1.5">
+								<Text className="font-jetbrains text-xs font-bold text-tertiary tracking-[1.5px] uppercase">
 									{item}
 								</Text>
 							</View>
@@ -179,8 +130,8 @@ export default function ActivityScreen() {
 				contentContainerStyle={{ paddingBottom: 100 }}
 				showsVerticalScrollIndicator={false}
 				ListEmptyComponent={
-					<View style={{ paddingTop: 40, alignItems: "center" }}>
-						<Text style={{ fontFamily: "DM Sans", fontSize: 14, color: "#A8A29E" }}>
+					<View className="pt-10 items-center">
+						<Text className="font-dm-sans text-md text-tertiary">
 							{isLoading ? "Loading activity..." : "No activity yet"}
 						</Text>
 					</View>

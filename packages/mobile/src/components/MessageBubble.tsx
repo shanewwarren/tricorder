@@ -10,31 +10,11 @@ interface MessageBubbleProps {
 
 export function MessageBubble({ content }: MessageBubbleProps) {
 	return (
-		<View
-			style={{
-				backgroundColor: "#292524",
-				borderRadius: 14,
-				padding: 16,
-				gap: 8,
-			}}
-		>
+		<View className="bg-text-dark rounded-xl p-4 gap-2">
 			{/* Label row */}
-			<View
-				style={{
-					flexDirection: "row",
-					alignItems: "center",
-					gap: 6,
-				}}
-			>
+			<View className="flex-row items-center gap-1.5">
 				<Feather name="star" size={14} color="#EA580C" />
-				<Text
-					style={{
-						fontFamily: "DM Sans",
-						fontSize: 12,
-						fontWeight: "600",
-						color: "rgba(255, 255, 255, 0.7)",
-					}}
-				>
+				<Text className="font-dm-sans text-sm font-semibold text-white/70">
 					Claude
 				</Text>
 			</View>

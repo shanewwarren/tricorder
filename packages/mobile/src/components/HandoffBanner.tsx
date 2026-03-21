@@ -17,40 +17,16 @@ export function HandoffBanner({ command }: HandoffBannerProps) {
 	};
 
 	return (
-		<View style={{ gap: 8, paddingHorizontal: 16, paddingVertical: 12 }}>
+		<View className="gap-2 px-4 py-3">
 			{/* Label */}
-			<Text
-				style={{
-					fontFamily: "DM Sans",
-					fontSize: 10,
-					fontWeight: "700",
-					letterSpacing: 1,
-					color: "#A8A29E",
-					textTransform: "uppercase",
-					textAlign: "center",
-				}}
-			>
+			<Text className="font-dm-sans text-2xs font-bold tracking-widest text-tertiary uppercase text-center">
 				Continue on your machine
 			</Text>
 
 			{/* Code block */}
-			<View
-				style={{
-					backgroundColor: "#F1F1F1",
-					borderRadius: 8,
-					paddingVertical: 10,
-					paddingHorizontal: 14,
-					flexDirection: "row",
-					alignItems: "center",
-				}}
-			>
+			<View className="bg-card rounded py-2.5 px-3.5 flex-row items-center">
 				<Text
-					style={{
-						fontFamily: "JetBrains Mono",
-						fontSize: 13,
-						color: "#292524",
-						flex: 1,
-					}}
+					className="font-jetbrains text-base text-text-dark flex-1"
 					numberOfLines={1}
 				>
 					{command}
