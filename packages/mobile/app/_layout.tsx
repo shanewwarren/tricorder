@@ -5,6 +5,17 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 
+import {
+	DM_Sans_400Regular,
+	DM_Sans_500Medium,
+	DM_Sans_600SemiBold,
+	DM_Sans_700Bold,
+} from "@expo-google-fonts/dm-sans";
+import {
+	JetBrainsMono_400Regular,
+	JetBrainsMono_700Bold,
+} from "@expo-google-fonts/jetbrains-mono";
+
 import { useColorScheme } from "@/components/useColorScheme";
 import { TrpcProvider } from "@/src/lib/TrpcProvider";
 import "../global.css";
@@ -24,6 +35,12 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
 	const [loaded, error] = useFonts({
+		"DM Sans": DM_Sans_400Regular,
+		"DM Sans Medium": DM_Sans_500Medium,
+		"DM Sans SemiBold": DM_Sans_600SemiBold,
+		"DM Sans Bold": DM_Sans_700Bold,
+		"JetBrains Mono": JetBrainsMono_400Regular,
+		"JetBrains Mono Bold": JetBrainsMono_700Bold,
 		SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
 	});
 
