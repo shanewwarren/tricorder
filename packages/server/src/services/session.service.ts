@@ -162,20 +162,36 @@ export class SessionService {
 	}
 
 	subscribe(sessionId: string, callback: (msg: unknown) => void): () => void {
-		// For Tricorder-launched sessions, use in-memory subscribers
-		const active = this.activeSessions.get(sessionId);
-		if (active) {
-			active.subscribers.add(callback);
-			return () => {
-				active.subscribers.delete(callback);
-			};
-		}
-
-		// For terminal-launched sessions, tail the JSONL file
+		// Always watch the JSONL file for updates (covers terminal sessions
+		// AND Tricorder sessions after they write to the file)
 		const unwatch = this.claudeSessionsService.watchSession(sessionId, (msg) => {
 			callback(msg);
 		});
-		return unwatch;
+
+		// Also register on in-memory subscribers if session is already active
+		// (covers real-time streaming for Tricorder-launched sessions)
+		const active = this.activeSessions.get(sessionId);
+		if (active) {
+			active.subscribers.add(callback);
+		}
+
+		// Periodically check if the session became active (e.g. after sendMessage)
+		// and register the callback on the new ActiveSession
+		const checkInterval = setInterval(() => {
+			const current = this.activeSessions.get(sessionId);
+			if (current && !current.subscribers.has(callback)) {
+				current.subscribers.add(callback);
+			}
+		}, 1000);
+
+		return () => {
+			unwatch();
+			clearInterval(checkInterval);
+			const currentActive = this.activeSessions.get(sessionId);
+			if (currentActive) {
+				currentActive.subscribers.delete(callback);
+			}
+		};
 	}
 
 	pause(sessionId: string) {
