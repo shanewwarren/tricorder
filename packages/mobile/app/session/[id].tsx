@@ -27,6 +27,12 @@ function formatElapsed(seconds: number): string {
 	return `${m}m ${s}s`;
 }
 
+function formatMessageTime(iso: string): string {
+	if (!iso) return "";
+	const d = new Date(iso);
+	return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+}
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function SessionScreen() {
@@ -290,17 +296,22 @@ export default function SessionScreen() {
 				keyExtractor={(item, i) => `${item.type}-${(item as any).index ?? i}`}
 				renderItem={({ item: msg }) => {
 					const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
+					const timeLabel = formatMessageTime(msg.timestamp);
+
+					let bubble: React.ReactNode;
 					switch (msg.type) {
 						case "user":
-							return <UserBubble content={text} />;
+							bubble = <UserBubble content={text} />;
+							break;
 						case "assistant":
-							return <MessageBubble content={text} />;
+							bubble = <MessageBubble content={text} />;
+							break;
 						case "tool_use": {
 							const content = msg.content as any;
 							const toolResult = displayMessages.find(
 								(m) => m.type === "tool_result" && (m.content as any)?.tool_use_id === content.id,
 							);
-							return (
+							bubble = (
 								<ToolCard
 									type={content.tool ?? "Bash"}
 									title={content.tool ?? "Tool"}
@@ -313,20 +324,34 @@ export default function SessionScreen() {
 									} : undefined}
 								/>
 							);
+							break;
 						}
 						case "result":
-							return <ResultSummary content={text} />;
+							bubble = <ResultSummary content={text} />;
+							break;
 						case "approval_request":
-							return (
+							bubble = (
 								<ApprovalPrompt
 									action={(msg.content as any)?.description ?? "Pending approval"}
 									onApprove={() => {}}
 									onDeny={() => {}}
 								/>
 							);
+							break;
 						default:
-							return <View />;
+							bubble = <View />;
 					}
+
+					return (
+						<View>
+							{bubble}
+							{timeLabel ? (
+								<Text className="font-jetbrains text-2xs text-ink-tertiary mt-1 px-1">
+									{timeLabel}
+								</Text>
+							) : null}
+						</View>
+					);
 				}}
 				estimatedItemSize={80}
 				contentContainerStyle={{ padding: 16, paddingBottom: 24 }}

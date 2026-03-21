@@ -87,6 +87,7 @@ export class ClaudeSessionsService {
 		let index = fromIdx ?? 0;
 
 		for (const msg of rawMessages) {
+			const ts = (msg as any).timestamp ?? "";
 			const msgContent =
 				msg.message && typeof msg.message === "object" && "content" in msg.message
 					? (msg.message as any).content
@@ -94,58 +95,47 @@ export class ClaudeSessionsService {
 
 			if (msg.type === "user") {
 				if (typeof msgContent === "string") {
-					if (msgContent) entries.push({ index: index++, type: "user", content: msgContent, timestamp: "" });
+					if (msgContent) entries.push({ index: index++, type: "user", content: msgContent, timestamp: ts });
 				} else if (Array.isArray(msgContent)) {
-					// Extract text blocks as user message
 					const text = msgContent
 						.filter((b: any) => b.type === "text")
 						.map((b: any) => b.text)
 						.join("\n");
-					if (text) entries.push({ index: index++, type: "user", content: text, timestamp: "" });
+					if (text) entries.push({ index: index++, type: "user", content: text, timestamp: ts });
 
-					// Extract tool_result blocks (API puts them in user turns)
 					for (const block of msgContent) {
 						if (block.type === "tool_result") {
 							entries.push({
 								index: index++,
 								type: "tool_result",
-								content: {
-									tool_use_id: block.tool_use_id,
-									content: block.content,
-									is_error: block.is_error,
-								},
-								timestamp: "",
+								content: { tool_use_id: block.tool_use_id, content: block.content, is_error: block.is_error },
+								timestamp: ts,
 							});
 						}
 					}
 				}
 			} else if (msg.type === "assistant") {
 				if (typeof msgContent === "string") {
-					entries.push({ index: index++, type: "assistant", content: msgContent, timestamp: "" });
+					entries.push({ index: index++, type: "assistant", content: msgContent, timestamp: ts });
 				} else if (Array.isArray(msgContent)) {
 					for (const block of msgContent) {
 						if (block.type === "text") {
-							entries.push({ index: index++, type: "assistant", content: block.text, timestamp: "" });
+							entries.push({ index: index++, type: "assistant", content: block.text, timestamp: ts });
 						} else if (block.type === "tool_use") {
 							entries.push({
 								index: index++,
 								type: "tool_use",
 								content: { tool: block.name, input: block.input, id: block.id },
-								timestamp: "",
+								timestamp: ts,
 							});
 						} else if (block.type === "tool_result") {
 							entries.push({
 								index: index++,
 								type: "tool_result",
-								content: {
-									tool_use_id: block.tool_use_id,
-									content: block.content,
-									is_error: block.is_error,
-								},
-								timestamp: "",
+								content: { tool_use_id: block.tool_use_id, content: block.content, is_error: block.is_error },
+								timestamp: ts,
 							});
 						}
-						// Skip "thinking" blocks and any other unknown types
 					}
 				}
 			}
