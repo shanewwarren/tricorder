@@ -278,20 +278,23 @@ export default function SessionScreen() {
 			{/* ── Message Stream ──────────────────────────────────────── */}
 			<FlashList
 				ref={listRef}
-				data={displayMessages.filter((m) => m.type !== "tool_result")}
+				data={displayMessages.filter((m) => {
+					if (m.type === "tool_result") return false;
+					if (m.type === "user" || m.type === "assistant") {
+						const text = typeof m.content === "string" ? m.content : JSON.stringify(m.content);
+						if (!text || text === '""') return false;
+					}
+					if (!["user", "assistant", "tool_use", "result", "approval_request"].includes(m.type)) return false;
+					return true;
+				})}
 				keyExtractor={(item, i) => `${item.type}-${(item as any).index ?? i}`}
 				renderItem={({ item: msg }) => {
+					const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
 					switch (msg.type) {
-						case "user": {
-							const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
-							if (!text || text === '""') return null;
+						case "user":
 							return <UserBubble content={text} />;
-						}
-						case "assistant": {
-							const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
-							if (!text || text === '""') return null;
+						case "assistant":
 							return <MessageBubble content={text} />;
-						}
 						case "tool_use": {
 							const content = msg.content as any;
 							const toolResult = displayMessages.find(
@@ -311,22 +314,18 @@ export default function SessionScreen() {
 								/>
 							);
 						}
-						case "result": {
-							const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
+						case "result":
 							return <ResultSummary content={text} />;
-						}
-						case "approval_request": {
-							const content = msg.content as any;
+						case "approval_request":
 							return (
 								<ApprovalPrompt
-									action={content.description ?? "Pending approval"}
+									action={(msg.content as any)?.description ?? "Pending approval"}
 									onApprove={() => {}}
 									onDeny={() => {}}
 								/>
 							);
-						}
 						default:
-							return null;
+							return <View />;
 					}
 				}}
 				estimatedItemSize={80}
