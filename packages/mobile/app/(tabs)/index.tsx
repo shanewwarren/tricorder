@@ -36,6 +36,8 @@ export default function SessionsScreen() {
 			mode: s.mode as "autonomous" | "interactive",
 			status: (s.status === "active" ? "running" : s.status === "cancelled" ? "completed" : s.status) as SessionStatus,
 			lastActivity: s.lastActivity || s.lastError || "",
+			createdAt: s.createdAt || "",
+			updatedAt: s.updatedAt || "",
 		}));
 	}, [serverSessions]);
 
