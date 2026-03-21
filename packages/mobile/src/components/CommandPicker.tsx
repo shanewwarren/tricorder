@@ -4,21 +4,21 @@ import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Command {
-	name: string;
+	label: string;
 	description: string;
-	hasArgs?: boolean;
+	prompt: string;
+	icon: keyof typeof Feather.glyphMap;
 }
 
 const COMMANDS: Command[] = [
-	{ name: "plan", description: "Enter plan mode to design before coding" },
-	{ name: "review", description: "Review code changes" },
-	{ name: "commit", description: "Commit staged changes" },
-	{ name: "mcp", description: "Manage MCP server connections" },
-	{ name: "help", description: "Show available commands" },
-	{ name: "clear", description: "Clear conversation history" },
-	{ name: "compact", description: "Compact conversation to save context" },
-	{ name: "model", description: "Switch the AI model", hasArgs: true },
-	{ name: "fast", description: "Toggle fast mode" },
+	{ label: "Plan", description: "Design an approach before coding", prompt: "Enter plan mode. Plan the implementation for: ", icon: "map" },
+	{ label: "Review", description: "Review recent code changes", prompt: "Review the code changes I've made and provide feedback on quality, bugs, and improvements.", icon: "eye" },
+	{ label: "Commit", description: "Commit staged changes", prompt: "Create a git commit for the staged changes with a descriptive commit message.", icon: "git-commit" },
+	{ label: "Test", description: "Run tests and report results", prompt: "Run the test suite and report the results. Fix any failures.", icon: "check-circle" },
+	{ label: "Explain", description: "Explain how something works", prompt: "Explain how this works: ", icon: "help-circle" },
+	{ label: "Refactor", description: "Improve code quality", prompt: "Refactor the following for better readability and maintainability: ", icon: "tool" },
+	{ label: "Debug", description: "Help fix a bug", prompt: "Help me debug this issue: ", icon: "alert-triangle" },
+	{ label: "Status", description: "Show git and project status", prompt: "Show me the current git status, recent commits, and any uncommitted changes.", icon: "info" },
 ];
 
 interface CommandPickerProps {
@@ -46,9 +46,9 @@ export function CommandPicker({ visible, onClose, onSelect }: CommandPickerProps
 				<ScrollView showsVerticalScrollIndicator={false}>
 					{COMMANDS.map((cmd) => (
 						<Pressable
-							key={cmd.name}
+							key={cmd.label}
 							onPress={() => {
-								onSelect(`/${cmd.name}`);
+								onSelect(cmd.prompt);
 								onClose();
 							}}
 							className="px-5 py-3"
@@ -56,11 +56,11 @@ export function CommandPicker({ visible, onClose, onSelect }: CommandPickerProps
 						>
 							<View className="flex-row items-center gap-3">
 								<View className="w-8 h-8 rounded-lg bg-surface-card items-center justify-center">
-									<Text className="font-jetbrains text-sm text-primary">/</Text>
+									<Feather name={cmd.icon} size={16} color="#EA580C" />
 								</View>
 								<View className="flex-1">
 									<Text className="font-dm-sans text-md font-semibold text-ink-dark">
-										/{cmd.name}
+										{cmd.label}
 									</Text>
 									<Text className="font-dm-sans text-sm text-ink-secondary mt-0.5">
 										{cmd.description}
