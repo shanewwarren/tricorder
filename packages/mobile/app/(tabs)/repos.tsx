@@ -13,7 +13,7 @@ function RepoCard({ repo }: { repo: { name: string; path: string; defaultBranch:
 			onPress={() => {
 				router.push(`/new-session?repo=${encodeURIComponent(repo.name)}&path=${encodeURIComponent(repo.path)}&branch=${encodeURIComponent(repo.defaultBranch)}` as any);
 			}}
-			className="bg-card rounded-2xl p-4 px-[18px]"
+			className="bg-surface-card rounded-2xl p-4 px-[18px]"
 			style={({ pressed }) => ({
 				opacity: pressed ? 0.8 : 1,
 			})}
@@ -29,12 +29,12 @@ function RepoCard({ repo }: { repo: { name: string; path: string; defaultBranch:
 					<View className="flex-row items-center gap-[10px]">
 						<View className="flex-row items-center gap-1">
 							<Feather name="git-branch" size={12} color="#78716C" />
-							<Text className="font-jetbrains text-sm text-secondary">
+							<Text className="font-jetbrains text-sm text-ink-secondary">
 								{repo.defaultBranch}
 							</Text>
 						</View>
-						<Text className="text-sm text-tertiary">·</Text>
-						<Text className="font-dm-sans text-sm text-tertiary">
+						<Text className="text-sm text-ink-tertiary">·</Text>
+						<Text className="font-dm-sans text-sm text-ink-tertiary">
 							{repo.lastCommitDate ?? "No commits"}
 						</Text>
 					</View>
@@ -51,7 +51,7 @@ export default function ReposScreen() {
 
 	return (
 		<View
-			className="flex-1 bg-page"
+			className="flex-1 bg-surface-page"
 			style={{ paddingTop: insets.top }}
 		>
 			{/* Header */}
@@ -69,7 +69,7 @@ export default function ReposScreen() {
 				showsVerticalScrollIndicator={false}
 				ListEmptyComponent={
 					<View className="pt-10 items-center">
-						<Text className="font-dm-sans text-md text-tertiary">
+						<Text className="font-dm-sans text-md text-ink-tertiary">
 							{isLoading ? "Loading repos..." : "No repos found"}
 						</Text>
 					</View>

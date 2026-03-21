@@ -26,7 +26,7 @@ export function ToolCard({ type, title, detail, diff, result }: ToolCardProps) {
 
 	return (
 		<View
-			className="bg-bg-card rounded-md p-[14px]"
+			className="bg-bg-surface-card rounded-md p-[14px]"
 			style={{ gap: isCompact ? 0 : 10 }}
 		>
 			{/* Header row */}

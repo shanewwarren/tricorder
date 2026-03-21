@@ -5,10 +5,10 @@ module.exports = {
 	theme: {
 		extend: {
 			colors: {
-				// Backgrounds
-				"bg-page": "#FAFAF9",
-				"bg-card": "#F1F1F1",
-				"bg-elevated": "#FFFFFF",
+				// Backgrounds (use surface-* to avoid bg-bg-* redundancy)
+				"surface-page": "#FAFAF9",
+				"surface-card": "#F1F1F1",
+				"surface-elevated": "#FFFFFF",
 				// Text (use ink-* to avoid collision with Tailwind's text-primary utility)
 				"ink-primary": "#1C1917",
 				"ink-dark": "#292524",

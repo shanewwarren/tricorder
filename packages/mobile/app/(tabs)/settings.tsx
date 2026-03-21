@@ -9,7 +9,7 @@ type Mode = "autonomous" | "interactive";
 
 function SectionHeader({ title }: { title: string }) {
 	return (
-		<Text className="font-jetbrains text-xs font-bold text-tertiary tracking-[1.5px] uppercase mt-6 mb-[10px]">
+		<Text className="font-jetbrains text-xs font-bold text-ink-tertiary tracking-[1.5px] uppercase mt-6 mb-[10px]">
 			{title}
 		</Text>
 	);
@@ -59,7 +59,7 @@ export default function SettingsScreen() {
 
 	return (
 		<View
-			className="flex-1 bg-page"
+			className="flex-1 bg-surface-page"
 			style={{ paddingTop: insets.top }}
 		>
 			<ScrollView
@@ -90,7 +90,7 @@ export default function SettingsScreen() {
 						</Text>
 						<Pressable
 							onPress={() => setEditingConnection(true)}
-							className="bg-elevated rounded-lg py-[10px] items-center flex-row justify-center gap-1.5"
+							className="bg-surface-elevated rounded-lg py-[10px] items-center flex-row justify-center gap-1.5"
 						>
 							<Feather name="link" size={16} color="#EA580C" />
 							<Text className="font-dm-sans text-md font-bold text-ink-primary">
@@ -115,7 +115,7 @@ export default function SettingsScreen() {
 						value={isConnected ? config?.host ?? "" : undefined}
 						rightElement={
 							!isConnected ? (
-								<Text className="font-jetbrains text-md text-tertiary">
+								<Text className="font-jetbrains text-md text-ink-tertiary">
 									Enter IP address
 								</Text>
 							) : undefined
@@ -126,7 +126,7 @@ export default function SettingsScreen() {
 						value={isConnected ? String(config?.port ?? 3141) : undefined}
 						rightElement={
 							!isConnected ? (
-								<Text className="font-jetbrains text-md text-tertiary">
+								<Text className="font-jetbrains text-md text-ink-tertiary">
 									Enter port
 								</Text>
 							) : undefined
@@ -198,7 +198,7 @@ export default function SettingsScreen() {
 
 				{/* SCAN DIRECTORY */}
 				<SectionHeader title="Scan Directory" />
-				<Pressable className="bg-card rounded-lg px-3.5 py-3.5 flex-row items-center justify-between">
+				<Pressable className="bg-surface-card rounded-lg px-3.5 py-3.5 flex-row items-center justify-between">
 					<Text
 						className="font-jetbrains text-md"
 						style={{ color: isConnected ? "#1C1917" : "#A8A29E" }}
@@ -250,7 +250,7 @@ export default function SettingsScreen() {
 				{/* PLUGINS */}
 				<SectionHeader title="Plugins" />
 				{plugins.length > 0 ? (
-					<View className="bg-card rounded-lg px-3.5">
+					<View className="bg-surface-card rounded-lg px-3.5">
 						{plugins.map((plugin: string, i: number, arr: string[]) => (
 							<View
 								key={plugin}
@@ -273,9 +273,9 @@ export default function SettingsScreen() {
 						))}
 					</View>
 				) : (
-					<View className="bg-card rounded-lg p-5 items-center">
+					<View className="bg-surface-card rounded-lg p-5 items-center">
 						<Feather name="package" size={20} color="#A8A29E" style={{ marginBottom: 6 }} />
-						<Text className="font-dm-sans text-base text-tertiary">
+						<Text className="font-dm-sans text-base text-ink-tertiary">
 							No plugins configured
 						</Text>
 					</View>
@@ -286,14 +286,14 @@ export default function SettingsScreen() {
 					<>
 						<SectionHeader title="MCP Servers" />
 						{Object.keys(mcpServers).length === 0 ? (
-							<View className="bg-card rounded-lg p-5 items-center">
+							<View className="bg-surface-card rounded-lg p-5 items-center">
 								<Feather name="server" size={20} color="#A8A29E" style={{ marginBottom: 6 }} />
-								<Text className="font-dm-sans text-base text-tertiary">
+								<Text className="font-dm-sans text-base text-ink-tertiary">
 									No MCP servers configured
 								</Text>
 							</View>
 						) : (
-							<View className="bg-card rounded-lg px-3.5">
+							<View className="bg-surface-card rounded-lg px-3.5">
 								{Object.entries(mcpServers).map(([name, server], i, arr) => (
 									<View
 										key={name}
@@ -306,7 +306,7 @@ export default function SettingsScreen() {
 										<Feather name="server" size={16} color="#1C1917" />
 										<View className="flex-1">
 											<Text className="font-dm-sans text-md text-ink-primary">{name}</Text>
-											<Text className="font-dm-sans text-sm text-secondary mt-0.5">
+											<Text className="font-dm-sans text-sm text-ink-secondary mt-0.5">
 												{server.command}
 											</Text>
 										</View>

@@ -78,13 +78,13 @@ function EventRow({ event }: { event: { id: string; sessionName: string; type: E
 					{event.sessionName}
 				</Text>
 				<Text
-					className="font-dm-sans text-base text-secondary mt-0.5"
+					className="font-dm-sans text-base text-ink-secondary mt-0.5"
 					numberOfLines={1}
 				>
 					{event.description}
 				</Text>
 			</View>
-			<Text className="font-dm-sans text-sm text-tertiary">
+			<Text className="font-dm-sans text-sm text-ink-tertiary">
 				{formatRelativeTime(event.timestamp)}
 			</Text>
 		</View>
@@ -102,7 +102,7 @@ export default function ActivityScreen() {
 
 	return (
 		<View
-			className="flex-1 bg-page"
+			className="flex-1 bg-surface-page"
 			style={{ paddingTop: insets.top }}
 		>
 			{/* Header */}
@@ -119,7 +119,7 @@ export default function ActivityScreen() {
 					if (typeof item === "string") {
 						return (
 							<View className="px-[21px] pt-4 pb-1.5">
-								<Text className="font-jetbrains text-xs font-bold text-tertiary tracking-[1.5px] uppercase">
+								<Text className="font-jetbrains text-xs font-bold text-ink-tertiary tracking-[1.5px] uppercase">
 									{item}
 								</Text>
 							</View>
@@ -131,7 +131,7 @@ export default function ActivityScreen() {
 				showsVerticalScrollIndicator={false}
 				ListEmptyComponent={
 					<View className="pt-10 items-center">
-						<Text className="font-dm-sans text-md text-tertiary">
+						<Text className="font-dm-sans text-md text-ink-tertiary">
 							{isLoading ? "Loading activity..." : "No activity yet"}
 						</Text>
 					</View>

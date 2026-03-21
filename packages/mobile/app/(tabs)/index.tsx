@@ -47,7 +47,7 @@ export default function SessionsScreen() {
 
 	return (
 		<View
-			className="flex-1 bg-page"
+			className="flex-1 bg-surface-page"
 			style={{ paddingTop: insets.top }}
 		>
 			{/* Header */}
@@ -88,7 +88,7 @@ export default function SessionsScreen() {
 				showsVerticalScrollIndicator={false}
 				ListEmptyComponent={
 					<View className="pt-10 items-center">
-						<Text className="font-dm-sans text-md text-tertiary">
+						<Text className="font-dm-sans text-md text-ink-tertiary">
 							{isLoading ? "Loading sessions..." : "No sessions yet"}
 						</Text>
 					</View>

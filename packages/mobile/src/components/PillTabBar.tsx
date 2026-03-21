@@ -25,7 +25,7 @@ export function PillTabBar({ state, navigation }: BottomTabBarProps) {
 			}}
 			pointerEvents="box-none"
 		>
-			<View className="h-[62px] rounded-full bg-bg-elevated border border-border-subtle flex-row gap-1 p-1">
+			<View className="h-[62px] rounded-full bg-bg-surface-elevated border border-border-subtle flex-row gap-1 p-1">
 				{state.routes.map((route, index) => {
 					const isActive = state.index === index;
 					const config = TAB_CONFIG[index];

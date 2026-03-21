@@ -13,7 +13,7 @@ export default function UsageScreen() {
 
 	return (
 		<View
-			className="flex-1 bg-page"
+			className="flex-1 bg-surface-page"
 			style={{ paddingTop: insets.top }}
 		>
 			<ScrollView
@@ -36,7 +36,7 @@ export default function UsageScreen() {
 				{/* Usage Cards */}
 				{!usage?.available ? (
 					<View className="pt-10 items-center">
-						<Text className="font-dm-sans text-md text-tertiary">
+						<Text className="font-dm-sans text-md text-ink-tertiary">
 							{isLoading ? "Loading usage..." : "Usage data unavailable"}
 						</Text>
 					</View>

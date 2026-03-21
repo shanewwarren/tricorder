@@ -132,8 +132,8 @@ export default function SessionScreen() {
 
 	if (!session) {
 		return (
-			<View className="flex-1 bg-page justify-center items-center">
-				<Text className="font-dm-sans text-md text-tertiary">Loading session...</Text>
+			<View className="flex-1 bg-surface-page justify-center items-center">
+				<Text className="font-dm-sans text-md text-ink-tertiary">Loading session...</Text>
 			</View>
 		);
 	}
@@ -161,12 +161,12 @@ export default function SessionScreen() {
 
 	return (
 		<KeyboardAvoidingView
-			className="flex-1 bg-page"
+			className="flex-1 bg-surface-page"
 			behavior={Platform.OS === "ios" ? "padding" : undefined}
 		>
 			{/* ── Header ──────────────────────────────────────────────── */}
 			<View
-				className="bg-page border-b"
+				className="bg-surface-page border-b"
 				style={{
 					paddingTop: insets.top,
 					borderBottomColor: "rgba(0,0,0,0.06)",
@@ -182,7 +182,7 @@ export default function SessionScreen() {
 						className="flex-1 flex-row items-center gap-1"
 					>
 						<Text
-							className="font-dm-sans text-xl font-bold text-dark flex-1"
+							className="font-dm-sans text-xl font-bold text-ink-dark flex-1"
 							numberOfLines={showPrompt ? undefined : 1}
 						>
 							{session.name}
@@ -191,14 +191,14 @@ export default function SessionScreen() {
 							<Feather name={showPrompt ? "chevron-up" : "chevron-down"} size={16} color="#A8A29E" />
 						)}
 					</Pressable>
-					<Text className="font-jetbrains text-md font-bold text-dark">
+					<Text className="font-jetbrains text-md font-bold text-ink-dark">
 						{formatElapsed(elapsedSeconds)}
 					</Text>
 				</View>
 
 				{/* Row 2: Repo + Mode + (Error pill) */}
 				<View className="flex-row items-center px-12 gap-2 pb-[10px]">
-					<Text className="font-jetbrains text-sm text-secondary">
+					<Text className="font-jetbrains text-sm text-ink-secondary">
 						{session.repoName}
 					</Text>
 					<ModeBadge mode={session.mode} />
@@ -208,8 +208,8 @@ export default function SessionScreen() {
 				{/* Expanded prompt */}
 				{showPrompt && session.initialPrompt && (
 					<View className="px-4 pb-[10px]">
-						<View className="bg-card rounded-md p-3">
-							<Text className="font-dm-sans text-base text-dark leading-[18px]">
+						<View className="bg-surface-card rounded-md p-3">
+							<Text className="font-dm-sans text-base text-ink-dark leading-[18px]">
 								{session.initialPrompt}
 							</Text>
 						</View>
@@ -346,7 +346,7 @@ export default function SessionScreen() {
 							onChangeText={setInputText}
 							placeholder="Send a message..."
 							placeholderTextColor="#A8A29E"
-							className="flex-1 h-10 bg-card rounded-full px-4 font-dm-sans text-md text-dark"
+							className="flex-1 h-10 bg-surface-card rounded-full px-4 font-dm-sans text-md text-ink-dark"
 							returnKeyType="send"
 							onSubmitEditing={handleSend}
 						/>

@@ -9,7 +9,7 @@ interface SegmentControlProps {
 
 export function SegmentControl({ segments, activeIndex, onPress }: SegmentControlProps) {
 	return (
-		<View className="bg-bg-card h-[38px] rounded-lg gap-1 p-1 flex-row">
+		<View className="bg-bg-surface-card h-[38px] rounded-lg gap-1 p-1 flex-row">
 			{segments.map((label, index) => {
 				const isActive = index === activeIndex;
 				return (

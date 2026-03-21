@@ -52,7 +52,7 @@ export default function NewSessionScreen() {
 
 	return (
 		<View
-			className="flex-1 bg-page"
+			className="flex-1 bg-surface-page"
 			style={{ paddingTop: insets.top }}
 		>
 			<ScrollView
@@ -108,7 +108,7 @@ export default function NewSessionScreen() {
 						</ScrollView>
 					</View>
 				)}
-				<Text className="font-dm-sans text-sm text-tertiary mb-5">
+				<Text className="font-dm-sans text-sm text-ink-tertiary mb-5">
 					{selectedRepo?.path ?? ""}
 				</Text>
 
@@ -161,7 +161,7 @@ export default function NewSessionScreen() {
 					value={prompt}
 					onChangeText={setPrompt}
 				/>
-				<Text className="font-dm-sans text-sm text-tertiary mt-1.5 mb-6">
+				<Text className="font-dm-sans text-sm text-ink-tertiary mt-1.5 mb-6">
 					Supports markdown. Be specific about files and goals.
 				</Text>
 

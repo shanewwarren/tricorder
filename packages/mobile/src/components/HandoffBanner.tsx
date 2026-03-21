@@ -19,12 +19,12 @@ export function HandoffBanner({ command }: HandoffBannerProps) {
 	return (
 		<View className="gap-2 px-4 py-3">
 			{/* Label */}
-			<Text className="font-dm-sans text-2xs font-bold tracking-widest text-tertiary uppercase text-center">
+			<Text className="font-dm-sans text-2xs font-bold tracking-widest text-ink-tertiary uppercase text-center">
 				Continue on your machine
 			</Text>
 
 			{/* Code block */}
-			<View className="bg-card rounded py-2.5 px-3.5 flex-row items-center">
+			<View className="bg-surface-card rounded py-2.5 px-3.5 flex-row items-center">
 				<Text
 					className="font-jetbrains text-base text-ink-dark flex-1"
 					numberOfLines={1}

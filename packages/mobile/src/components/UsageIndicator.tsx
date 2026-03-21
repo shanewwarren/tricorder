@@ -19,7 +19,7 @@ export function UsageIndicator({ percentage }: UsageIndicatorProps) {
 	return (
 		<Pressable
 			onPress={() => router.push("/usage" as any)}
-			className="bg-card rounded-xl px-2.5 py-1.5 flex-row items-center gap-1.5"
+			className="bg-surface-card rounded-xl px-2.5 py-1.5 flex-row items-center gap-1.5"
 		>
 			<View
 				className="w-2 h-2 rounded-full"

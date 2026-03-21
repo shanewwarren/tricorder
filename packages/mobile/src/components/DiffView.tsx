@@ -8,7 +8,7 @@ interface DiffViewProps {
 
 export function DiffView({ removed, added }: DiffViewProps) {
 	return (
-		<View className="bg-text-dark/[0.06] rounded-sm p-2 gap-1">
+		<View className="bg-text-ink-dark/[0.06] rounded-sm p-2 gap-1">
 			{removed.map((line, i) => (
 				<Text
 					key={`r-${i}`}
