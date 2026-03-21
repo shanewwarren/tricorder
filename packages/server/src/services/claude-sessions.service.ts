@@ -182,44 +182,43 @@ export class ClaudeSessionsService {
 		}
 
 		let index = 0;
+
+		const checkForNewContent = () => {
+			try {
+				const newSize = statSync(filePath).size;
+				if (newSize <= fileSize) return;
+
+				const fd = require("fs").openSync(filePath, "r");
+				const buffer = Buffer.alloc(newSize - fileSize);
+				require("fs").readSync(fd, buffer, 0, buffer.length, fileSize);
+				require("fs").closeSync(fd);
+				fileSize = newSize;
+
+				const lines = buffer.toString("utf-8").split("\n").filter((l: string) => l.trim());
+				for (const line of lines) {
+					try {
+						const entry = JSON.parse(line);
+						const parsed = this.parseJsonlEntry(entry, index);
+						for (const msg of parsed) {
+							onNewMessage(msg);
+							index++;
+						}
+					} catch {}
+				}
+			} catch {}
+		};
+
+		// Use both fs.watch (instant but unreliable on macOS) and polling (reliable fallback)
 		let watcher: FSWatcher | null = null;
-
 		try {
-			watcher = watch(filePath, () => {
-				try {
-					const newSize = statSync(filePath).size;
-					if (newSize <= fileSize) return;
+			watcher = watch(filePath, checkForNewContent);
+		} catch {}
 
-					// Read only the new bytes
-					const fd = require("fs").openSync(filePath, "r");
-					const buffer = Buffer.alloc(newSize - fileSize);
-					require("fs").readSync(fd, buffer, 0, buffer.length, fileSize);
-					require("fs").closeSync(fd);
-					fileSize = newSize;
-
-					const newContent = buffer.toString("utf-8");
-					const lines = newContent.split("\n").filter((l: string) => l.trim());
-
-					for (const line of lines) {
-						try {
-							const entry = JSON.parse(line);
-							const parsed = this.parseJsonlEntry(entry, index);
-							if (parsed.length > 0) {
-								for (const msg of parsed) {
-									onNewMessage(msg);
-									index++;
-								}
-							}
-						} catch {}
-					}
-				} catch {}
-			});
-		} catch {
-			return () => {};
-		}
+		const pollInterval = setInterval(checkForNewContent, 2000);
 
 		return () => {
 			watcher?.close();
+			clearInterval(pollInterval);
 		};
 	}
 
