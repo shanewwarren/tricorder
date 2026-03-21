@@ -1,4 +1,5 @@
 import { join } from "path";
+import cors from "cors";
 import { createHTTPServer } from "@trpc/server/adapters/standalone";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { WebSocketServer } from "ws";
@@ -19,6 +20,20 @@ const container = createAppContainer(config, db);
 const httpServer = createHTTPServer({
 	router: appRouter,
 	createContext: () => ({ container }),
+	middleware: cors(),
+	onError: ({ error, path }) => {
+		console.error(`[tRPC error] ${path}:`, error.message);
+	},
+});
+
+// Log incoming requests
+const originalListeners = httpServer.listeners("request");
+httpServer.removeAllListeners("request");
+httpServer.on("request", (req, res) => {
+	console.log(`[${req.method}] ${req.url}`);
+	for (const listener of originalListeners) {
+		(listener as Function).call(httpServer, req, res);
+	}
 });
 
 const wss = new WebSocketServer({ server: httpServer });

@@ -17,7 +17,11 @@ export class WorktreeService {
 
 		const worktreePath = join(this.worktreesDir, sessionId);
 		const git = simpleGit(repoPath);
-		await git.raw(["worktree", "add", worktreePath, branch]);
+		// Create a detached worktree from the branch to avoid conflicts
+		// when the branch is already checked out in the main worktree
+		const shortId = sessionId.slice(0, 8);
+		const worktreeBranch = `tricorder/${shortId}`;
+		await git.raw(["worktree", "add", "-b", worktreeBranch, worktreePath, branch]);
 		return worktreePath;
 	}
 

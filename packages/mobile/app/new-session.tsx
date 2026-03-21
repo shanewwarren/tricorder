@@ -32,10 +32,10 @@ export default function NewSessionScreen() {
 
 	const utils = trpc.useUtils();
 	const createSession = trpc.sessions.create.useMutation({
-		onSuccess: (data) => {
+		onSuccess: (sessionId) => {
 			utils.sessions.list.invalidate();
 			utils.activity.list.invalidate();
-			router.replace(`/session/${data.id}` as any);
+			router.replace(`/session/${sessionId}` as any);
 		},
 	});
 

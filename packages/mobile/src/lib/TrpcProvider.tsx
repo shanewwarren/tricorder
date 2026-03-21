@@ -8,6 +8,14 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       staleTime: 10_000,
+      onError: (error: unknown) => {
+        console.error("[tRPC query error]", error instanceof Error ? error.message : error);
+      },
+    },
+    mutations: {
+      onError: (error) => {
+        console.error("[tRPC mutation error]", error.message, error);
+      },
     },
   },
 });
