@@ -120,6 +120,7 @@ export class SessionService {
 		return {
 			id: meta.sessionId,
 			name: meta.name,
+			initialPrompt: meta.initialPrompt,
 			repoName: meta.repoName,
 			branch: meta.gitBranch,
 			mode: manifest?.mode ?? "interactive",

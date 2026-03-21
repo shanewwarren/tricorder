@@ -10,6 +10,7 @@ import {
 export interface ClaudeSessionMeta {
 	sessionId: string;
 	name: string;
+	initialPrompt: string;
 	projectDir: string;
 	repoName: string;
 	gitBranch: string;
@@ -311,6 +312,7 @@ export class ClaudeSessionsService {
 		return {
 			sessionId,
 			name,
+			initialPrompt: firstUserMessage || "",
 			projectDir,
 			repoName,
 			gitBranch: gitBranch || "",

@@ -29,6 +29,7 @@ export default function SessionScreen() {
 	const scrollRef = useRef<ScrollView>(null);
 	const [inputText, setInputText] = useState("");
 	const [now, setNow] = useState(Date.now());
+	const [showPrompt, setShowPrompt] = useState(false);
 
 	const initStream = useStreamStore((s) => s.initStream);
 	const addMessage = useStreamStore((s) => s.addMessage);
@@ -183,18 +184,26 @@ export default function SessionScreen() {
 					<Pressable onPress={() => router.back()} hitSlop={12} style={{ marginRight: 8 }}>
 						<Feather name="chevron-left" size={24} color="#292524" />
 					</Pressable>
-					<Text
-						style={{
-							fontFamily: "DM Sans",
-							fontSize: 16,
-							fontWeight: "700",
-							color: "#292524",
-							flex: 1,
-						}}
-						numberOfLines={1}
+					<Pressable
+						onPress={() => session.initialPrompt && setShowPrompt(!showPrompt)}
+						style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 4 }}
 					>
-						{session.name}
-					</Text>
+						<Text
+							style={{
+								fontFamily: "DM Sans",
+								fontSize: 16,
+								fontWeight: "700",
+								color: "#292524",
+								flex: 1,
+							}}
+							numberOfLines={showPrompt ? undefined : 1}
+						>
+							{session.name}
+						</Text>
+						{session.initialPrompt && session.initialPrompt.length > 40 && (
+							<Feather name={showPrompt ? "chevron-up" : "chevron-down"} size={16} color="#A8A29E" />
+						)}
+					</Pressable>
 					<Text
 						style={{
 							fontFamily: "JetBrains Mono",
@@ -229,6 +238,17 @@ export default function SessionScreen() {
 					<ModeBadge mode={session.mode} />
 					{isError && <StatusPill status={uiStatus as any} />}
 				</View>
+
+				{/* Expanded prompt */}
+				{showPrompt && session.initialPrompt && (
+					<View style={{ paddingHorizontal: 16, paddingBottom: 10 }}>
+						<View style={{ backgroundColor: "#F1F1F1", borderRadius: 10, padding: 12 }}>
+							<Text style={{ fontFamily: "DM Sans", fontSize: 13, color: "#292524", lineHeight: 18 }}>
+								{session.initialPrompt}
+							</Text>
+						</View>
+					</View>
+				)}
 
 				{/* Row 3: Action buttons */}
 				{(isActive || isError) && (
