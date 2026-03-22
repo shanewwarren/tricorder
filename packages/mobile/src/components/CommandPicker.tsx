@@ -36,7 +36,7 @@ export function CommandPicker({ visible, onClose, onSelect }: CommandPickerProps
 	const skillCommands: Command[] = (skills ?? []).map((s) => ({
 		label: s.name,
 		description: s.description,
-		prompt: `use ${s.name} `,
+		prompt: `/${s.name} `,
 		icon: "zap" as keyof typeof Feather.glyphMap,
 		isSkill: true,
 	}));

@@ -1,4 +1,7 @@
 import { randomUUID } from "crypto";
+import { readdirSync, existsSync } from "fs";
+import { join } from "path";
+import { homedir } from "os";
 import { query, type Options } from "@anthropic-ai/claude-agent-sdk";
 import type { SandboxService } from "./sandbox.service";
 import type { SessionMode, ServerConfig } from "@tricorder/shared";
@@ -37,13 +40,14 @@ export class AgentService {
 			});
 		}
 
-		const plugins =
-			this.config.plugins.length > 0
-				? this.config.plugins.map((p) => ({
-						type: "local" as const,
-						path: p,
-					}))
-				: undefined;
+		// Discover installed plugins from ~/.claude/plugins/cache/
+		const discoveredPlugins = this.discoverPlugins();
+		const configPlugins = this.config.plugins.map((p) => ({
+			type: "local" as const,
+			path: p,
+		}));
+		const plugins = [...configPlugins, ...discoveredPlugins];
+		const pluginsOption = plugins.length > 0 ? plugins : undefined;
 
 		const mcpServers = Object.keys(this.config.mcpServers).length > 0 ? this.config.mcpServers : undefined;
 
@@ -53,7 +57,7 @@ export class AgentService {
 			abortController,
 			includePartialMessages: true,
 			...(resumeSessionId ? { resume: resumeSessionId } : {}),
-			...(plugins ? { plugins } : {}),
+			...(pluginsOption ? { plugins: pluginsOption } : {}),
 			...(mcpServers ? { mcpServers } : {}),
 			...(mode === "interactive" && callbacks.onApprovalRequest
 				? {
@@ -117,6 +121,34 @@ export class AgentService {
 		} catch (error) {
 			callbacks.onError(error instanceof Error ? error : new Error(String(error)));
 		}
+	}
+
+	private discoverPlugins(): Array<{ type: "local"; path: string }> {
+		const plugins: Array<{ type: "local"; path: string }> = [];
+		const cacheDir = join(homedir(), ".claude", "plugins", "cache");
+		if (!existsSync(cacheDir)) return plugins;
+
+		try {
+			for (const marketplace of readdirSync(cacheDir, { withFileTypes: true })) {
+				if (!marketplace.isDirectory()) continue;
+				const marketplacePath = join(cacheDir, marketplace.name);
+				for (const plugin of readdirSync(marketplacePath, { withFileTypes: true })) {
+					if (!plugin.isDirectory()) continue;
+					const pluginPath = join(marketplacePath, plugin.name);
+					// Find latest version
+					const versions = readdirSync(pluginPath, { withFileTypes: true })
+						.filter((d) => d.isDirectory())
+						.map((d) => d.name)
+						.sort()
+						.reverse();
+					if (versions.length > 0) {
+						plugins.push({ type: "local", path: join(pluginPath, versions[0]) });
+					}
+				}
+			}
+		} catch {}
+
+		return plugins;
 	}
 
 	private createSandboxHook(worktreeRoot: string) {
