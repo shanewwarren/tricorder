@@ -14,7 +14,7 @@ import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Image, KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View } from "react-native";
+import { Alert, Image, KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -49,6 +49,8 @@ export default function SessionScreen() {
 	const [showHandoffSheet, setShowHandoffSheet] = useState(false);
 	const [showCommandPicker, setShowCommandPicker] = useState(false);
 	const [selectedImage, setSelectedImage] = useState<string | null>(null);
+	const [showSearch, setShowSearch] = useState(false);
+	const [searchText, setSearchText] = useState("");
 
 	const initStream = useStreamStore((s) => s.initStream);
 	const addMessage = useStreamStore((s) => s.addMessage);
@@ -145,6 +147,51 @@ export default function SessionScreen() {
 		});
 	}, [stream?.messages, messages]);
 
+	// Filter messages by search text
+	const filteredMessages = useMemo(() => {
+		if (!searchText.trim()) return displayMessages;
+		const q = searchText.toLowerCase();
+		return displayMessages.filter((msg) => {
+			const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content ?? "");
+			return text.toLowerCase().includes(q);
+		});
+	}, [displayMessages, searchText]);
+
+	// Export session as markdown
+	const handleExport = useCallback(() => {
+		const lines: string[] = [];
+		for (const msg of displayMessages) {
+			const text = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content ?? "");
+			switch (msg.type) {
+				case "user":
+					lines.push(`## User\n${text}\n`);
+					break;
+				case "assistant":
+					lines.push(`## Claude\n${text}\n`);
+					break;
+				case "tool_use": {
+					const content = msg.content as any;
+					const detail = content?.input?.file_path ?? content?.input?.command ?? content?.input?.pattern ?? "";
+					lines.push(`## Tool: ${content?.tool ?? "Unknown"}\n${detail}\n`);
+					break;
+				}
+				case "result":
+					lines.push(`## Result\n${text}\n`);
+					break;
+			}
+		}
+		const markdown = lines.join("\n");
+		if (typeof navigator !== "undefined" && navigator.clipboard) {
+			navigator.clipboard.writeText(markdown).then(() => {
+				Alert.alert("Copied", "Session exported to clipboard as markdown.");
+			}).catch(() => {
+				Alert.alert("Error", "Failed to copy to clipboard.");
+			});
+		} else {
+			Alert.alert("Export", "Clipboard API not available on this platform.");
+		}
+	}, [displayMessages]);
+
 	// Always scroll to bottom when messages change
 	useEffect(() => {
 		if (displayMessages.length > 0) {
@@ -226,7 +273,49 @@ export default function SessionScreen() {
 					<Text className="font-jetbrains text-md font-bold text-ink-dark">
 						{formatElapsed(elapsedSeconds)}
 					</Text>
+					<Pressable
+						onPress={() => { setShowSearch(!showSearch); if (showSearch) setSearchText(""); }}
+						hitSlop={8}
+						className="ml-2 w-8 h-8 rounded-full items-center justify-center"
+						style={{ backgroundColor: showSearch ? "rgba(234, 88, 12, 0.12)" : "transparent" }}
+					>
+						<Feather name="search" size={16} color={showSearch ? "#EA580C" : "#78716C"} />
+					</Pressable>
+					<Pressable
+						onPress={handleExport}
+						hitSlop={8}
+						className="w-8 h-8 rounded-full items-center justify-center"
+					>
+						<Feather name="share" size={16} color="#78716C" />
+					</Pressable>
 				</View>
+
+				{/* Search bar */}
+				{showSearch && (
+					<View className="px-4 pb-2">
+						<View className="flex-row items-center bg-surface-card rounded-full px-3 h-9" style={{ borderWidth: 1, borderColor: searchText ? "#EA580C" : "rgba(0,0,0,0.06)" }}>
+							<Feather name="search" size={14} color="#A8A29E" />
+							<TextInput
+								value={searchText}
+								onChangeText={setSearchText}
+								placeholder="Search messages..."
+								placeholderTextColor="#A8A29E"
+								className="flex-1 ml-2 font-dm-sans text-sm text-ink-dark"
+								autoFocus
+							/>
+							{searchText.length > 0 && (
+								<Pressable onPress={() => setSearchText("")} hitSlop={8}>
+									<Feather name="x" size={14} color="#A8A29E" />
+								</Pressable>
+							)}
+						</View>
+						{searchText.length > 0 && (
+							<Text className="font-jetbrains text-xs text-ink-tertiary mt-1 ml-1">
+								{filteredMessages.length} matches
+							</Text>
+						)}
+					</View>
+				)}
 
 				{/* Row 2: Repo + Mode + (Error pill) */}
 				<View className="flex-row items-center px-12 gap-2 pb-[10px]">
@@ -299,7 +388,7 @@ export default function SessionScreen() {
 			{/* ── Message Stream ──────────────────────────────────────── */}
 			<FlashList
 				ref={listRef}
-				data={displayMessages.filter((m) => {
+				data={filteredMessages.filter((m) => {
 					if (m.type === "tool_result") return false;
 					if (m.type === "user" || m.type === "assistant") {
 						const text = typeof m.content === "string" ? m.content : JSON.stringify(m.content);
