@@ -50,6 +50,7 @@ export default function SettingsScreen() {
 	const [editingConnection, setEditingConnection] = useState(false);
 
 	const [selectedMode, setSelectedMode] = useState<Mode>("autonomous");
+	const [selectedModel, setSelectedModel] = useState("claude-sonnet-4-5");
 	const plugins = config?.plugins ?? [];
 	const mcpServers = config?.mcpServers ?? {};
 
@@ -245,6 +246,22 @@ export default function SettingsScreen() {
 							Interactive
 						</Text>
 					</Pressable>
+				</View>
+
+				{/* MODEL */}
+				<SectionHeader title="Model" />
+				<View className="bg-surface-card rounded-lg px-3.5">
+					{["claude-sonnet-4-5", "claude-opus-4", "claude-haiku-4-5"].map((model, i, arr) => (
+						<Pressable
+							key={model}
+							onPress={() => setSelectedModel(model)}
+							className="flex-row items-center justify-between py-3.5"
+							style={{ borderBottomWidth: i < arr.length - 1 ? 1 : 0, borderBottomColor: "#E7E5E4" }}
+						>
+							<Text className="font-jetbrains text-md text-ink-dark">{model}</Text>
+							{selectedModel === model && <Feather name="check" size={18} color="#EA580C" />}
+						</Pressable>
+					))}
 				</View>
 
 				{/* PLUGINS */}

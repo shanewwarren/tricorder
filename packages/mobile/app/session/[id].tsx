@@ -14,7 +14,8 @@ import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View } from "react-native";
+import { Image, KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -47,6 +48,7 @@ export default function SessionScreen() {
 	const [showPrompt, setShowPrompt] = useState(false);
 	const [showHandoffSheet, setShowHandoffSheet] = useState(false);
 	const [showCommandPicker, setShowCommandPicker] = useState(false);
+	const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
 	const initStream = useStreamStore((s) => s.initStream);
 	const addMessage = useStreamStore((s) => s.addMessage);
@@ -171,10 +173,22 @@ export default function SessionScreen() {
 		? Math.floor((now - new Date(session.createdAt).getTime()) / 1000)
 		: Math.floor((new Date(session.updatedAt).getTime() - new Date(session.createdAt).getTime()) / 1000);
 
+	const pickImage = async () => {
+		const result = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ['images'],
+			base64: true,
+			quality: 0.7,
+		});
+		if (!result.canceled && result.assets[0].base64) {
+			setSelectedImage(result.assets[0].base64);
+		}
+	};
+
 	const handleSend = () => {
-		if (!inputText.trim()) return;
+		if (!inputText.trim() && !selectedImage) return;
 		sendMessage.mutate({ id: session.id, message: inputText.trim() });
 		setInputText("");
+		setSelectedImage(null);
 	};
 
 	return (
@@ -400,6 +414,14 @@ export default function SessionScreen() {
 					paddingBottom: insets.bottom || 16,
 				}}
 			>
+				{selectedImage && (
+					<View className="px-4 pt-2 flex-row items-center gap-2">
+						<Image source={{ uri: `data:image/jpeg;base64,${selectedImage}` }} className="w-16 h-16 rounded-lg" />
+						<Pressable onPress={() => setSelectedImage(null)}>
+							<Feather name="x-circle" size={20} color="#A8A29E" />
+						</Pressable>
+					</View>
+				)}
 				<View className="flex-row items-center px-4 pt-3 gap-2">
 					<Pressable
 						onPress={() => setShowHandoffSheet(true)}
@@ -412,6 +434,12 @@ export default function SessionScreen() {
 						className="w-10 h-10 rounded-full items-center justify-center bg-surface-card"
 					>
 						<Text className="font-jetbrains text-lg font-bold text-primary">/</Text>
+					</Pressable>
+					<Pressable
+						onPress={pickImage}
+						className="w-10 h-10 rounded-full items-center justify-center bg-surface-card"
+					>
+						<Feather name="image" size={18} color="#78716C" />
 					</Pressable>
 					<TextInput
 						value={inputText}

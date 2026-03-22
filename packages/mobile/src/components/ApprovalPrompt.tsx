@@ -6,9 +6,10 @@ interface ApprovalPromptProps {
 	action: string;
 	onApprove: () => void;
 	onDeny: () => void;
+	onAlwaysAllow?: () => void;
 }
 
-export function ApprovalPrompt({ action, onApprove, onDeny }: ApprovalPromptProps) {
+export function ApprovalPrompt({ action, onApprove, onDeny, onAlwaysAllow }: ApprovalPromptProps) {
 	return (
 		<View className="bg-surface-elevated rounded-md border-[1.5px] border-primary p-[14px] gap-[10px]">
 			{/* Header */}
@@ -24,11 +25,11 @@ export function ApprovalPrompt({ action, onApprove, onDeny }: ApprovalPromptProp
 				{action}
 			</Text>
 
-			{/* Buttons row */}
-			<View className="flex-row gap-[10px]">
+			{/* Buttons */}
+			<View className="gap-[10px]">
 				<Pressable
 					onPress={onApprove}
-					className="flex-1 h-9 rounded flex-row items-center justify-center gap-[6px]"
+					className="h-9 rounded flex-row items-center justify-center gap-[6px]"
 					style={({ pressed }) => ({
 						backgroundColor: pressed ? "#0F9380" : "#14B8A6",
 					})}
@@ -39,18 +40,33 @@ export function ApprovalPrompt({ action, onApprove, onDeny }: ApprovalPromptProp
 					</Text>
 				</Pressable>
 
-				<Pressable
-					onPress={onDeny}
-					className="flex-1 h-9 rounded flex-row items-center justify-center gap-[6px]"
-					style={({ pressed }) => ({
-						backgroundColor: pressed ? "rgba(220, 38, 38, 0.2)" : "rgba(220, 38, 38, 0.12)",
-					})}
-				>
-					<Feather name="x" size={16} color="#DC2626" />
-					<Text className="font-dm-sans text-base font-semibold text-status-error">
-						Deny
-					</Text>
-				</Pressable>
+				<View className="flex-row gap-[10px]">
+					<Pressable
+						onPress={onAlwaysAllow}
+						className="flex-1 h-9 rounded flex-row items-center justify-center gap-[6px]"
+						style={({ pressed }) => ({
+							backgroundColor: pressed ? "rgba(22, 163, 74, 0.2)" : "rgba(22, 163, 74, 0.12)",
+						})}
+					>
+						<Feather name="check-circle" size={16} color="#16A34A" />
+						<Text className="font-dm-sans text-base font-semibold" style={{ color: "#16A34A" }}>
+							Always Allow
+						</Text>
+					</Pressable>
+
+					<Pressable
+						onPress={onDeny}
+						className="flex-1 h-9 rounded flex-row items-center justify-center gap-[6px]"
+						style={({ pressed }) => ({
+							backgroundColor: pressed ? "rgba(220, 38, 38, 0.2)" : "rgba(220, 38, 38, 0.12)",
+						})}
+					>
+						<Feather name="x" size={16} color="#DC2626" />
+						<Text className="font-dm-sans text-base font-semibold text-status-error">
+							Deny
+						</Text>
+					</Pressable>
+				</View>
 			</View>
 		</View>
 	);
