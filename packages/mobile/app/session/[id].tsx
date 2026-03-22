@@ -305,7 +305,7 @@ export default function SessionScreen() {
 							bubble = <UserBubble content={text} />;
 							break;
 						case "assistant":
-							bubble = <MessageBubble content={text} />;
+							bubble = <MessageBubble content={text} usage={(msg as any).usage} />;
 							break;
 						case "tool_use": {
 							const content = msg.content as any;

@@ -29,6 +29,7 @@ export interface ParsedMessage {
 	type: string;
 	content: unknown;
 	timestamp: string;
+	usage?: { inputTokens?: number; outputTokens?: number; cost?: number };
 }
 
 export class ClaudeSessionsService {
@@ -93,6 +94,15 @@ export class ClaudeSessionsService {
 					? (msg.message as any).content
 					: "";
 
+			// Extract usage data from assistant messages
+			const rawUsage = msg.message && typeof msg.message === "object" ? (msg.message as any).usage : undefined;
+			const usage = rawUsage
+				? {
+					inputTokens: rawUsage.input_tokens as number | undefined,
+					outputTokens: rawUsage.output_tokens as number | undefined,
+				}
+				: undefined;
+
 			if (msg.type === "user") {
 				if (typeof msgContent === "string") {
 					if (msgContent) entries.push({ index: index++, type: "user", content: msgContent, timestamp: ts });
@@ -116,11 +126,13 @@ export class ClaudeSessionsService {
 				}
 			} else if (msg.type === "assistant") {
 				if (typeof msgContent === "string") {
-					entries.push({ index: index++, type: "assistant", content: msgContent, timestamp: ts });
+					entries.push({ index: index++, type: "assistant", content: msgContent, timestamp: ts, ...(usage && { usage }) });
 				} else if (Array.isArray(msgContent)) {
+					let usageAttached = false;
 					for (const block of msgContent) {
 						if (block.type === "text") {
-							entries.push({ index: index++, type: "assistant", content: block.text, timestamp: ts });
+							entries.push({ index: index++, type: "assistant", content: block.text, timestamp: ts, ...(!usageAttached && usage && { usage }) });
+							usageAttached = true;
 						} else if (block.type === "tool_use") {
 							entries.push({
 								index: index++,
@@ -243,6 +255,15 @@ export class ClaudeSessionsService {
 		const msgContent = entry.message?.content ?? "";
 		const type = entry.type;
 
+		// Extract usage data from assistant messages
+		const rawUsage = entry.message?.usage;
+		const usage = rawUsage
+			? {
+				inputTokens: rawUsage.input_tokens as number | undefined,
+				outputTokens: rawUsage.output_tokens as number | undefined,
+			}
+			: undefined;
+
 		if (type === "user") {
 			if (typeof msgContent === "string" && msgContent) {
 				results.push({ index: baseIndex, type: "user", content: msgContent, timestamp: entry.timestamp ?? "" });
@@ -262,11 +283,13 @@ export class ClaudeSessionsService {
 			}
 		} else if (type === "assistant") {
 			if (typeof msgContent === "string" && msgContent) {
-				results.push({ index: baseIndex, type: "assistant", content: msgContent, timestamp: entry.timestamp ?? "" });
+				results.push({ index: baseIndex, type: "assistant", content: msgContent, timestamp: entry.timestamp ?? "", ...(usage && { usage }) });
 			} else if (Array.isArray(msgContent)) {
+				let usageAttached = false;
 				for (const block of msgContent) {
 					if (block.type === "text" && block.text) {
-						results.push({ index: baseIndex, type: "assistant", content: block.text, timestamp: entry.timestamp ?? "" });
+						results.push({ index: baseIndex, type: "assistant", content: block.text, timestamp: entry.timestamp ?? "", ...(!usageAttached && usage && { usage }) });
+						usageAttached = true;
 					} else if (block.type === "tool_use") {
 						results.push({
 							index: baseIndex,

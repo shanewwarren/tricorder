@@ -5,7 +5,7 @@ import { trpc } from "@/src/lib/trpc";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState, useMemo } from "react";
-import { FlatList, Pressable, Text, View } from "react-native";
+import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type SessionStatus = "running" | "waiting" | "paused" | "completed" | "error";
@@ -22,6 +22,7 @@ export default function SessionsScreen() {
 	const router = useRouter();
 	const insets = useSafeAreaInsets();
 	const [activeSegment, setActiveSegment] = useState(0);
+	const [searchQuery, setSearchQuery] = useState("");
 
 	const { data: serverSessions, isLoading } = trpc.sessions.list.useQuery();
 	const { data: usage } = trpc.usage.current.useQuery();
@@ -43,9 +44,18 @@ export default function SessionsScreen() {
 
 	const filteredSessions = useMemo(() => {
 		const allowedStatuses = SEGMENT_STATUS_MAP[SEGMENTS[activeSegment]];
-		if (!allowedStatuses) return sessions;
-		return sessions.filter((s) => allowedStatuses.includes(s.status));
-	}, [sessions, activeSegment]);
+		let result = allowedStatuses ? sessions.filter((s) => allowedStatuses.includes(s.status)) : sessions;
+		if (searchQuery.trim()) {
+			const q = searchQuery.trim().toLowerCase();
+			result = result.filter(
+				(s) =>
+					s.name.toLowerCase().includes(q) ||
+					s.repoName.toLowerCase().includes(q) ||
+					s.lastActivity.toLowerCase().includes(q),
+			);
+		}
+		return result;
+	}, [sessions, activeSegment, searchQuery]);
 
 	return (
 		<View
@@ -71,6 +81,22 @@ export default function SessionsScreen() {
 					<Feather name="plus" size={18} color="#FFFFFF" />
 				</Pressable>
 			</View>
+
+			{/* Search Bar */}
+			{sessions.length > 5 && (
+				<View className="px-[21px] mb-3">
+					<View className="bg-surface-card rounded-full h-10 px-4 flex-row items-center">
+						<Feather name="search" size={14} color="#A8A29E" />
+						<TextInput
+							value={searchQuery}
+							onChangeText={setSearchQuery}
+							placeholder="Search sessions..."
+							placeholderTextColor="#A8A29E"
+							className="flex-1 ml-2 font-dm-sans text-md text-ink-dark"
+						/>
+					</View>
+				</View>
+			)}
 
 			{/* Segment Control */}
 			<View className="px-[21px] mb-4">

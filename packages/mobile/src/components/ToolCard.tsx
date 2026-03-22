@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { DiffView } from "./DiffView";
 
@@ -23,6 +23,9 @@ interface ToolCardProps {
 export function ToolCard({ type, title, detail, diff, result }: ToolCardProps) {
 	const icon = TOOL_ICONS[type];
 	const isCompact = type === "Read" || type === "Grep";
+	const [expanded, setExpanded] = useState(false);
+	const outputLineCount = result?.output.split("\n").length ?? 0;
+	const showToggle = outputLineCount >= 5;
 
 	return (
 		<View
@@ -45,26 +48,41 @@ export function ToolCard({ type, title, detail, diff, result }: ToolCardProps) {
 			</Pressable>
 
 			{/* Diff section for Edit */}
-			{type === "Edit" && diff && <DiffView removed={diff.removed} added={diff.added} />}
+			{type === "Edit" && diff && (
+				<DiffView
+					removed={diff.removed}
+					added={diff.added}
+					filePath={type === "Edit" ? detail : undefined}
+				/>
+			)}
 
 			{/* Result section */}
 			{result && (
-				<View
-					className="rounded-sm p-2 flex-row items-center gap-[6px]"
-					style={{
-						backgroundColor: result.status === "success" ? "rgba(22, 163, 74, 0.08)" : "rgba(220, 38, 38, 0.08)",
-					}}
-				>
-					<Feather name={result.status === "success" ? "check" : "x"} size={14} color={result.status === "success" ? "#16A34A" : "#DC2626"} />
-					<Text
-						className="font-jetbrains text-xs flex-1"
+				<View>
+					<View
+						className="rounded-sm p-2 flex-row items-start gap-[6px]"
 						style={{
-							color: result.status === "success" ? "#16A34A" : "#DC2626",
+							backgroundColor: result.status === "success" ? "rgba(22, 163, 74, 0.08)" : "rgba(220, 38, 38, 0.08)",
 						}}
-						numberOfLines={3}
 					>
-						{result.output}
-					</Text>
+						<Feather name={result.status === "success" ? "check" : "x"} size={14} color={result.status === "success" ? "#16A34A" : "#DC2626"} />
+						<Text
+							className="font-jetbrains text-xs flex-1"
+							style={{
+								color: result.status === "success" ? "#16A34A" : "#DC2626",
+							}}
+							numberOfLines={expanded ? undefined : 5}
+						>
+							{result.output}
+						</Text>
+					</View>
+					{showToggle && (
+						<Pressable onPress={() => setExpanded((v) => !v)} className="pt-1 px-2">
+							<Text className="font-dm-sans text-xs text-ink-secondary">
+								{expanded ? "Show less" : "Show more"}
+							</Text>
+						</Pressable>
+					)}
 				</View>
 			)}
 		</View>
