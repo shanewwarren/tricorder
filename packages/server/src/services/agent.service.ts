@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { readdirSync, existsSync } from "fs";
+import { readdirSync, readFileSync, existsSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 import { query, type Options } from "@anthropic-ai/claude-agent-sdk";
@@ -49,7 +49,10 @@ export class AgentService {
 		const plugins = [...configPlugins, ...discoveredPlugins];
 		const pluginsOption = plugins.length > 0 ? plugins : undefined;
 
-		const mcpServers = Object.keys(this.config.mcpServers).length > 0 ? this.config.mcpServers : undefined;
+		// Merge config MCP servers with user's ~/.claude/mcp.json
+		const userMcpServers = this.loadUserMcpConfig();
+		const allMcpServers = { ...userMcpServers, ...this.config.mcpServers };
+		const mcpServers = Object.keys(allMcpServers).length > 0 ? allMcpServers : undefined;
 
 		const options: Options = {
 			allowedTools,
@@ -61,9 +64,11 @@ export class AgentService {
 			...(mcpServers ? { mcpServers } : {}),
 			...(mode === "interactive" && callbacks.onApprovalRequest
 				? {
-						canUseTool: async (toolName: string, toolInput: Record<string, unknown>) => {
+						canUseTool: async (toolName: string, toolInput: Record<string, unknown>, sdkOptions: any) => {
 							const toolUseId = randomUUID();
-							const title = `${toolName}`;
+							const detail = (toolInput.command ?? toolInput.file_path ?? toolInput.pattern ?? "") as string;
+							const title = sdkOptions?.title ?? `Claude wants to use ${toolName}`;
+							const description = detail ? `${title}\n${detail}` : title;
 
 							callbacks.onMessage({
 								type: "approval_request",
@@ -71,7 +76,7 @@ export class AgentService {
 									toolUseId,
 									toolName,
 									title,
-									description: toolName,
+									description,
 									input: toolInput,
 								},
 							});
@@ -149,6 +154,17 @@ export class AgentService {
 		} catch {}
 
 		return plugins;
+	}
+
+	private loadUserMcpConfig(): Record<string, unknown> {
+		const mcpPath = join(homedir(), ".claude", "mcp.json");
+		if (!existsSync(mcpPath)) return {};
+		try {
+			const data = JSON.parse(readFileSync(mcpPath, "utf-8"));
+			return data.mcpServers ?? {};
+		} catch {
+			return {};
+		}
 	}
 
 	private createSandboxHook(worktreeRoot: string) {

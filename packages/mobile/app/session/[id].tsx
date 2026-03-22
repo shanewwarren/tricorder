@@ -48,6 +48,7 @@ export default function SessionScreen() {
 	const [showPrompt, setShowPrompt] = useState(false);
 	const [showHandoffSheet, setShowHandoffSheet] = useState(false);
 	const [showCommandPicker, setShowCommandPicker] = useState(false);
+	const [currentToolActivity, setCurrentToolActivity] = useState<string | null>(null);
 	const [selectedImage, setSelectedImage] = useState<string | null>(null);
 	const [showSearch, setShowSearch] = useState(false);
 	const [searchText, setSearchText] = useState("");
@@ -93,6 +94,14 @@ export default function SessionScreen() {
 			enabled: !!id && !!stream,
 			onData: (message) => {
 				addMessage(id!, message);
+				// Track tool activity for progress indicator
+				const msg = message as any;
+				if (msg.type === "tool_use") {
+					const tool = msg.content?.tool ?? msg.content?.toolName;
+					if (tool) setCurrentToolActivity(`Using ${tool}...`);
+				} else if (msg.type === "assistant" || msg.type === "result") {
+					setCurrentToolActivity(null);
+				}
 			},
 			onStarted: () => {
 				setConnected(id!, true);
@@ -488,7 +497,7 @@ export default function SessionScreen() {
 						<View className="p-4 mt-1">
 							<View className="bg-ink-dark rounded-xl px-4 py-3 flex-row items-center gap-2 self-start">
 								<Feather name="star" size={14} color="#EA580C" />
-								<Text className="font-dm-sans text-sm text-white/70">Claude is thinking...</Text>
+								<Text className="font-dm-sans text-sm text-white/70">{currentToolActivity ?? "Claude is thinking..."}</Text>
 							</View>
 						</View>
 					) : null
